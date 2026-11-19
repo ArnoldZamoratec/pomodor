@@ -246,10 +246,13 @@ input { font: inherit; color: var(--text); }
 
 .row { display: flex; gap: 8px; align-items: center; }
 
+.field input.sr-only,
 .sr-only {
 	position: absolute;
 	width: 1px;
 	height: 1px;
+	padding: 0;
+	border: 0;
 	overflow: hidden;
 	clip: rect(0 0 0 0);
 	white-space: nowrap;
@@ -901,17 +904,195 @@ input { font: inherit; color: var(--text); }
 	.center { grid-column: 1 / -1; order: -1; }
 }
 
+/* La barra inferior solo existe en celular */
+.tabbar { display: none; }
+
 @media (max-width: 720px) {
-	.topbar { padding: 14px 16px; }
-	.brand span { display: none; }
-	.layout {
-		grid-template-columns: 1fr;
-		padding: 0 16px 24px;
-		gap: 18px;
+	:root { --tabbar-h: 66px; }
+
+	body {
+		padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
 	}
-	.panel { max-height: none; }
-	.mode { padding: 7px 11px 7px 8px; font-size: 0.84rem; }
-	.controls { gap: 18px; }
-	.play-btn { width: 80px; height: 80px; }
-	.ctrl-btn { width: 52px; height: 52px; }
+
+	.topbar {
+		padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
+	}
+
+	.brand { font-size: 1.1rem; }
+
+	.layout {
+		display: block;
+		min-height: 0;
+		padding: 0 16px 12px;
+	}
+
+	/* Una sección a la vez, según la pestaña elegida */
+	.layout > * { display: none; }
+	body[data-view='timer'] .center { display: flex; }
+	body[data-view='session'] [data-panel='session'],
+	body[data-view='sounds'] [data-panel='sounds'] { display: flex; }
+
+	.panel {
+		max-height: none;
+		overflow: visible;
+		padding: 20px 18px;
+		border-radius: 22px;
+	}
+
+	.panel h2 { font-size: 1.35rem; }
+
+	/* Temporizador ocupa la pantalla */
+	.center {
+		min-height: calc(100dvh - var(--tabbar-h) - env(safe-area-inset-bottom) - env(safe-area-inset-top) - 86px);
+		justify-content: space-evenly;
+		gap: 10px;
+		padding-top: 0;
+	}
+
+	.modes { width: 100%; justify-content: space-between; }
+	.mode {
+		flex: 1;
+		justify-content: center;
+		white-space: nowrap;
+		padding: 9px 6px;
+		font-size: 0.86rem;
+	}
+	.mode .ic { display: none; }
+
+	.now-icon { display: none; }
+	.now-label { font-size: 0.9rem; }
+	.now-topic {
+		font-size: clamp(1.5rem, 7vw, 2rem);
+		justify-content: center;
+	}
+
+	.clock { width: min(76vw, 36dvh); min-width: 200px; }
+	.time { font-size: clamp(3.4rem, 17vw, 5rem); }
+	.round-info { font-size: 0.85rem; gap: 6px; }
+
+	.controls { gap: 22px; }
+	.play-btn { width: 82px; height: 82px; }
+	.ctrl-btn { width: 54px; height: 54px; }
+
+	.quote { min-height: 4.4rem; padding: 0 4px; }
+	.quote blockquote { font-size: clamp(1.35rem, 6vw, 1.7rem); }
+
+	.sounds { grid-template-columns: 1fr 1fr; gap: 12px; }
+	.gallery { grid-template-columns: repeat(5, 1fr); }
+
+	/* Botones más fáciles de tocar */
+	.square-btn { width: 48px; height: 48px; }
+	.tasks li { padding: 12px; }
+	.tasks li button { width: 34px; height: 34px; opacity: 0.7; }
+
+	.toast {
+		bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 14px);
+		width: max-content;
+	}
+
+	/* Barra inferior */
+	.tabbar {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		position: fixed;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 15;
+		height: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+		padding: 6px 8px env(safe-area-inset-bottom);
+		background: var(--panel);
+		border-top: 1px solid var(--panel-border);
+		backdrop-filter: blur(22px) saturate(1.2);
+		-webkit-backdrop-filter: blur(22px) saturate(1.2);
+	}
+
+	.tabbar button {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 3px;
+		border-radius: 14px;
+		color: var(--faint);
+		font-size: 0.74rem;
+		font-weight: 600;
+		transition: color 0.2s, background 0.2s;
+	}
+
+	.tabbar button[aria-current='page'] {
+		color: var(--text);
+		background: color-mix(in srgb, var(--accent) 16%, transparent);
+	}
+
+	.tabbar button[aria-current='page'] .ic { color: var(--accent); }
+
+	.tab-time {
+		font-size: 1.05rem;
+		font-weight: 800;
+		font-variant-numeric: tabular-nums;
+		letter-spacing: -0.02em;
+		line-height: 22px;
+	}
+
+	.tabbar button[aria-current='page'] .tab-time { color: var(--accent); }
+
+	.tab-badge {
+		position: absolute;
+		top: 4px;
+		left: calc(50% + 8px);
+		min-width: 17px;
+		height: 17px;
+		padding: 0 4px;
+		border-radius: 999px;
+		background: var(--accent);
+		color: #fff;
+		font-style: normal;
+		font-size: 0.68rem;
+		font-weight: 800;
+		line-height: 17px;
+		text-align: center;
+	}
+
+	.tab-badge[hidden] { display: none; }
+}
+
+/* Celulares de pantalla baja (ej. 360×640) */
+@media (max-width: 720px) and (max-height: 700px) {
+	.topbar { padding-top: calc(6px + env(safe-area-inset-top)); padding-bottom: 6px; }
+	.now-label { display: none; }
+	.now-topic { font-size: clamp(1.3rem, 6vw, 1.6rem); }
+	.clock { width: min(70vw, 34dvh); }
+	.time { font-size: clamp(3rem, 15vw, 4rem); }
+	.play-btn { width: 70px; height: 70px; }
+	.ctrl-btn { width: 48px; height: 48px; }
+	.quote { min-height: 3.6rem; }
+	.quote blockquote { font-size: 1.2rem; }
+	.quote figcaption { margin-top: 4px; font-size: 0.82rem; }
+}
+
+/* Celulares muy angostos */
+@media (max-width: 360px) {
+	.mode { font-size: 0.78rem; padding: 8px 4px; }
+	.today-count { padding: 6px 12px 6px 8px; }
+	.brand span { display: none; }
+}
+
+/* Celular horizontal: reloj y controles lado a lado */
+@media (max-width: 920px) and (max-height: 500px) and (orientation: landscape) {
+	.center {
+		display: grid;
+		grid-template-columns: auto 1fr;
+		grid-template-areas: 'clock modes' 'clock now' 'clock controls' 'clock quote';
+		align-items: center;
+		gap: 8px 28px;
+		text-align: left;
+	}
+	.modes { grid-area: modes; }
+	.now { grid-area: now; align-items: flex-start; }
+	.clock { grid-area: clock; width: min(62dvh, 300px); min-width: 0; }
+	.controls { grid-area: controls; }
+	.quote { grid-area: quote; min-height: 0; padding: 0; }
+	.quote blockquote { font-size: 1.2rem; }
 }

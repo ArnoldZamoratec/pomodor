@@ -2,7 +2,10 @@
 <html lang="es" class="theme-dark">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+		<meta name="theme-color" content="#1e1714" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="mobile-web-app-capable" content="yes" />
 		<title>Focus Timer</title>
 
 		<link rel="apple-touch-icon" sizes="180x180" href="./favicons/apple-touch-icon.png" />
@@ -17,7 +20,7 @@
 		/>
 		<link rel="stylesheet" href="styles.css" />
 	</head>
-	<body data-mode="work">
+	<body data-mode="work" data-view="timer">
 		<!-- Iconos de línea (estilo Lucide) -->
 		<svg width="0" height="0" style="position:absolute" aria-hidden="true">
 			<symbol id="i-brand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13.5" r="8"/><path d="M12 13.5V10M12 5.5V2.5M8.5 6.5C10 4.8 11 4.6 12 5.5c1-.9 2-.7 3.5 1"/></symbol>
@@ -63,7 +66,7 @@
 
 		<main class="layout">
 			<!-- ========== QUÉ VAS A HACER ========== -->
-			<aside class="panel" aria-label="Tu sesión">
+			<aside class="panel" data-panel="session" id="panelSession" aria-label="Tu sesión">
 				<h2><svg class="ic" width="28" height="28" aria-hidden="true"><use href="#i-pencil"/></svg> ¿Qué vas a hacer?</h2>
 
 				<label class="field">
@@ -135,7 +138,7 @@
 			</aside>
 
 			<!-- ========== TEMPORIZADOR ========== -->
-			<section class="center">
+			<section class="center" id="panelTimer">
 				<div class="modes" role="tablist" aria-label="Tipo de bloque">
 					<button class="mode active" data-mode="work" role="tab">
 						<svg class="ic" width="20" height="20" aria-hidden="true"><use href="#i-brand"/></svg> Enfoque
@@ -188,7 +191,7 @@
 			</section>
 
 			<!-- ========== SONIDOS + HISTORIAL ========== -->
-			<aside class="panel" aria-label="Sonidos e historial">
+			<aside class="panel" data-panel="sounds" id="panelSounds" aria-label="Sonidos e historial">
 				<h2><svg class="ic" width="28" height="28" aria-hidden="true"><use href="#i-headphones"/></svg> Sonidos</h2>
 				<p class="hint">Mezcla varios y ajusta el volumen de cada uno.</p>
 				<div class="sounds" id="soundGrid"></div>
@@ -200,6 +203,23 @@
 				<ul class="log" id="logList"></ul>
 			</aside>
 		</main>
+
+		<!-- Navegación inferior (solo en celular) -->
+		<nav class="tabbar" aria-label="Secciones">
+			<button data-view="session" aria-controls="panelSession">
+				<svg class="ic" width="22" height="22" aria-hidden="true"><use href="#i-pencil"/></svg>
+				<span>Mi sesión</span>
+			</button>
+			<button data-view="timer" aria-controls="panelTimer" aria-current="page">
+				<span class="tab-time" id="tabTime">25:00</span>
+				<span>Temporizador</span>
+			</button>
+			<button data-view="sounds" aria-controls="panelSounds">
+				<svg class="ic" width="22" height="22" aria-hidden="true"><use href="#i-headphones"/></svg>
+				<span>Sonidos</span>
+				<i class="tab-badge" id="soundBadge" hidden></i>
+			</button>
+		</nav>
 
 		<div class="drop-overlay" id="dropOverlay" aria-hidden="true">
 			<div>

@@ -97,6 +97,28 @@ const el = {
 
 el.ring.style.strokeDasharray = CIRC
 
+// ---------- Navegación inferior (celular) ----------
+const tabTime = $('#tabTime')
+const soundBadge = $('#soundBadge')
+const tabButtons = document.querySelectorAll('.tabbar button')
+
+function setView(view) {
+	document.body.dataset.view = view
+	tabButtons.forEach(b => {
+		if (b.dataset.view === view) b.setAttribute('aria-current', 'page')
+		else b.removeAttribute('aria-current')
+	})
+	window.scrollTo({ top: 0 })
+}
+
+tabButtons.forEach(b => b.addEventListener('click', () => setView(b.dataset.view)))
+
+function updateSoundBadge() {
+	const n = document.querySelectorAll('.sound.active').length
+	soundBadge.hidden = n === 0
+	soundBadge.textContent = n
+}
+
 // ---------- Utilidades ----------
 const fmt = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
 
@@ -143,6 +165,7 @@ const totalSeconds = () => MODE_INFO[mode].minutes() * 60
 // ---------- Render ----------
 function renderTimer() {
 	el.time.textContent = fmt(remaining)
+	tabTime.textContent = fmt(remaining)
 	const progress = 1 - remaining / totalSeconds()
 	el.ring.style.strokeDashoffset = CIRC * progress
 	el.play.classList.toggle('running', isRunning())
@@ -544,6 +567,7 @@ function renderSounds() {
 				card.classList.add('active')
 			}
 			btn.setAttribute('aria-pressed', String(sounds.isActive(s.id)))
+			updateSoundBadge()
 		})
 		range.addEventListener('input', () => {
 			sounds.setVolume(s.id, Number(range.value))
@@ -561,6 +585,7 @@ function renderSounds() {
 			c.classList.remove('active')
 			c.querySelector('button').setAttribute('aria-pressed', 'false')
 		})
+		updateSoundBadge()
 	})
 }
 

@@ -1,0 +1,9 @@
+# Copia de respaldo local del proyecto original
+_original/
+
+# Sistema / editores
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/

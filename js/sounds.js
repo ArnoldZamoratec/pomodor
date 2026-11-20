@@ -165,10 +165,10 @@ const generators = {
 }
 
 export const SOUND_LIST = [
-	{ id: 'rain', name: 'Lluvia', file: 'audio/rain.wav' },
-	{ id: 'forest', name: 'Bosque', file: 'audio/forest.wav' },
-	{ id: 'fire', name: 'Fogata', file: 'audio/fire.wav' },
-	{ id: 'coffee', name: 'Cafetería', file: 'audio/coffee.wav' },
+	{ id: 'rain', name: 'Lluvia', file: 'audio/rain.mp3' },
+	{ id: 'forest', name: 'Bosque', file: 'audio/forest.mp3' },
+	{ id: 'fire', name: 'Fogata', file: 'audio/fire.mp3' },
+	{ id: 'coffee', name: 'Cafetería', file: 'audio/coffee.mp3' },
 	{ id: 'waves', name: 'Olas del mar', gen: 'waves' },
 	{ id: 'wind', name: 'Viento', gen: 'wind' },
 	{ id: 'fan', name: 'Ventilador', gen: 'fan' },
@@ -179,27 +179,44 @@ export const SOUND_LIST = [
 ]
 
 export function SoundEngine() {
-	const active = {} // id -> { stop(), setVolume(v) }
+	const active = {} // id -> { stop(), setVolume(v), volume }
+	let master = 1 // se baja en los descansos
+
+	// Sube/baja el volumen de un <audio> poco a poco
+	function fadeAudio(a, to, ms = 1200) {
+		clearInterval(a._fade)
+		const from = a.volume
+		const steps = Math.max(1, Math.round(ms / 50))
+		let i = 0
+		a._fade = setInterval(() => {
+			i++
+			a.volume = Math.min(1, Math.max(0, from + (to - from) * (i / steps)))
+			if (i >= steps) clearInterval(a._fade)
+		}, 50)
+	}
 
 	function start(sound, volume) {
 		if (active[sound.id]) return
 		if (sound.file) {
 			const a = new Audio(sound.file)
 			a.loop = true
-			a.volume = volume
+			a.volume = 0
 			a.play().catch(() => {})
+			fadeAudio(a, volume * master, 600)
 			active[sound.id] = {
-				stop: () => { a.pause(); a.src = '' },
-				setVolume: v => { a.volume = v }
+				volume,
+				stop: () => { clearInterval(a._fade); a.pause(); a.src = '' },
+				setVolume: (v, ms = 0) => (ms ? fadeAudio(a, v, ms) : (clearInterval(a._fade), (a.volume = v)))
 			}
 		} else {
 			const ac = getCtx()
 			const out = ac.createGain()
 			out.gain.value = 0
 			out.connect(ac.destination)
-			out.gain.linearRampToValueAtTime(volume, ac.currentTime + 0.6)
+			out.gain.linearRampToValueAtTime(volume * master, ac.currentTime + 0.6)
 			const nodes = generators[sound.gen](out)
 			active[sound.id] = {
+				volume,
 				stop: () => {
 					out.gain.cancelScheduledValues(ac.currentTime)
 					out.gain.setValueAtTime(out.gain.value, ac.currentTime)
@@ -209,7 +226,7 @@ export function SoundEngine() {
 						out.disconnect()
 					}, 350)
 				},
-				setVolume: v => out.gain.setTargetAtTime(v, ac.currentTime, 0.05)
+				setVolume: (v, ms = 0) => out.gain.setTargetAtTime(v, ac.currentTime, ms ? ms / 3000 : 0.05)
 			}
 		}
 	}
@@ -221,7 +238,16 @@ export function SoundEngine() {
 	}
 
 	function setVolume(id, v) {
-		active[id]?.setVolume(v)
+		if (!active[id]) return
+		active[id].volume = v
+		active[id].setVolume(v * master)
+	}
+
+	// Volumen general (1 = normal). Se aplica suave a todo lo que suena.
+	function setMaster(m) {
+		if (m === master) return
+		master = m
+		Object.values(active).forEach(s => s.setVolume(s.volume * master, 1500))
 	}
 
 	function isActive(id) {
@@ -263,5 +289,25 @@ export function SoundEngine() {
 		o.stop(ac.currentTime + 0.1)
 	}
 
-	return { start, stop, setVolume, isActive, stopAll, chime, click }
+	// Aviso suave: dos notas graves y lentas, sin sobresaltar
+	function softBell() {
+		const ac = getCtx()
+		;[523.25, 659.25].forEach((f, i) => {
+			const t = ac.currentTime + i * 0.45
+			const o = ac.createOscillator()
+			const g = ac.createGain()
+			o.type = 'sine'
+			o.frequency.value = f
+			g.gain.setValueAtTime(0, t)
+			g.gain.linearRampToValueAtTime(0.09, t + 0.08)
+			g.gain.exponentialRampToValueAtTime(0.0001, t + 2.2)
+			o.connect(g).connect(ac.destination)
+			o.start(t)
+			o.stop(t + 2.3)
+		})
+	}
+
+	const activeCount = () => Object.keys(active).length
+
+	return { start, stop, setVolume, setMaster, isActive, stopAll, chime, click, softBell, activeCount }
 }

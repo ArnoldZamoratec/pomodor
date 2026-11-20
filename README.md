@@ -10,7 +10,23 @@ Temporizador pomodoro con fondo según tu tema, sonidos ambientales y frases mot
 - **Sube tus imágenes**: botón, arrastrar y soltar o Ctrl+V. Se guardan en el navegador (IndexedDB).
 - **11 sonidos mezclables**: lluvia, bosque, fogata, cafetería, olas, viento, ventilador, reloj tic-tac y ruido blanco, rosa y marrón (los últimos se generan con Web Audio API).
 - **Frases** que rotan según el modo (enfoque, descanso, descanso largo).
-- Historial del día, tema claro/oscuro y atajo de teclado (Espacio para iniciar/pausar).
+- **Modo enfoque**: al iniciar solo queda el reloj y tu tema; fondo atenuado, segundos discretos y controles que se desvanecen.
+- **Tu progreso**: meta diaria, racha de días seguidos, gráfico de la semana y tiempo por tema (se guarda hasta un año).
+- **¿Cómo te fue?**: al terminar cada pomodoro marcas cómo te fue y si terminaste la tarea actual.
+- **Aviso suave** cuando falta 1 minuto y **sonidos más bajos** en los descansos (opcionales).
+- **App instalable** (PWA): se puede añadir a la pantalla de inicio y funciona sin internet.
+- Tema claro/oscuro y pantalla completa opcional.
+
+## Atajos de teclado
+
+| Tecla | Acción |
+| --- | --- |
+| Espacio | Iniciar / pausar |
+| R | Reiniciar |
+| S | Saltar bloque |
+| M | Silenciar sonidos |
+| F | Pantalla completa |
+| Esc | Ver las secciones sin pausar |
 
 ## Cómo ejecutarlo
 

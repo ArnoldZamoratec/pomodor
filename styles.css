@@ -951,6 +951,187 @@ body.focusing.idle .topbar-actions { opacity: 0; pointer-events: none; }
 body.focusing.idle .round-info { opacity: 0.45; }
 body.focusing.idle { cursor: none; }
 
+/* ---------- Meta diaria y opciones ---------- */
+.goal-field .unit input { padding-right: 104px; }
+.options { display: flex; flex-direction: column; gap: 10px; }
+[hidden] { display: none !important; }
+
+/* ---------- Atajos ---------- */
+.shortcuts dl {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	gap: 7px 12px;
+	align-items: center;
+	font-size: 0.88rem;
+	color: var(--muted);
+	margin-top: 10px;
+}
+.shortcuts kbd {
+	display: inline-block;
+	min-width: 28px;
+	padding: 3px 8px;
+	border-radius: 7px;
+	background: var(--input);
+	border: 1px solid var(--input-border);
+	border-bottom-width: 2px;
+	font: 600 0.8rem var(--sans);
+	color: var(--text);
+	text-align: center;
+}
+
+/* ---------- Progreso ---------- */
+.progress { display: flex; flex-direction: column; gap: 14px; }
+
+.goal-top {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 8px;
+	font-size: 0.92rem;
+	font-weight: 600;
+	margin-bottom: 8px;
+}
+.streak {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 3px 10px 3px 7px;
+	border-radius: 999px;
+	background: color-mix(in srgb, #ff9a3c 18%, transparent);
+	color: var(--text);
+	font-size: 0.82rem;
+	white-space: nowrap;
+}
+.streak .ic { color: #ff9a3c; }
+.goal-bar {
+	height: 10px;
+	border-radius: 999px;
+	background: var(--track);
+	overflow: hidden;
+}
+.goal-bar i {
+	display: block;
+	height: 100%;
+	width: 0;
+	border-radius: inherit;
+	background: linear-gradient(90deg, var(--accent-2), var(--accent));
+	transition: width 0.8s cubic-bezier(.2, .8, .2, 1);
+}
+.goal-bar.full i { background: linear-gradient(90deg, #f5b942, #ff9a3c); }
+
+.week {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	gap: 6px;
+	height: 108px;
+}
+.week .day {
+	display: grid;
+	grid-template-rows: 16px 1fr 18px;
+	justify-items: center;
+	gap: 4px;
+	font-size: 0.75rem;
+	color: var(--faint);
+}
+.week .bar {
+	width: 100%;
+	max-width: 26px;
+	border-radius: 7px;
+	background: var(--input);
+	display: flex;
+	align-items: flex-end;
+	overflow: hidden;
+}
+.week .bar i {
+	display: block;
+	width: 100%;
+	border-radius: 7px;
+	background: color-mix(in srgb, var(--accent) 55%, transparent);
+	transition: height 0.6s ease;
+}
+.week .day.met .bar i { background: var(--accent); }
+.week .day.today .l { color: var(--text); font-weight: 700; }
+.week .n { color: var(--muted); font-weight: 600; }
+
+.week-total { font-size: 0.86rem; color: var(--muted); }
+
+.by-topic { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.by-topic li {
+	display: grid;
+	grid-template-columns: 1fr auto;
+	gap: 4px 10px;
+	font-size: 0.88rem;
+}
+.by-topic b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.by-topic span { color: var(--muted); }
+.by-topic i {
+	grid-column: 1 / -1;
+	height: 5px;
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--accent) 70%, transparent);
+}
+
+/* ---------- ¿Cómo te fue? ---------- */
+.reflect {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 12px;
+	padding: 16px 18px;
+	border-radius: var(--r-panel);
+	background: var(--panel);
+	border: 1px solid var(--panel-border);
+	backdrop-filter: blur(18px);
+	-webkit-backdrop-filter: blur(18px);
+	box-shadow: var(--shadow);
+	max-width: 460px;
+	width: 100%;
+	animation: panel-in 0.4s ease both;
+}
+.reflect-q { font-weight: 700; font-size: 1.02rem; text-wrap: balance; }
+.reflect-moods { display: flex; gap: 8px; width: 100%; }
+.reflect-moods button {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	padding: 10px 6px;
+	border-radius: var(--r-control);
+	background: var(--input);
+	border: 1px solid var(--input-border);
+	font-size: 0.85rem;
+	font-weight: 600;
+	transition: transform 0.12s, border-color 0.2s, background 0.2s;
+}
+.reflect-moods button span { font-size: 1.6rem; line-height: 1; }
+.reflect-moods button:hover { border-color: var(--accent); }
+.reflect-moods button:active { transform: scale(0.95); }
+.reflect-moods button.on {
+	border-color: var(--accent);
+	background: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.reflect-task {
+	width: 100%;
+	padding: 10px 12px;
+	border-radius: var(--r-control);
+	background: var(--accent);
+	color: #fff;
+	font-weight: 600;
+	font-size: 0.92rem;
+}
+
+/* ---------- Aviso de último minuto ---------- */
+.ring-progress.warn { animation: warn-pulse 0.8s ease-in-out 3; }
+@keyframes warn-pulse {
+	50% { stroke-width: 12; opacity: 0.7; }
+}
+
+/* ---------- Instalada como app ---------- */
+@media (display-mode: standalone) {
+	.topbar { padding-top: calc(18px + env(safe-area-inset-top)); }
+}
+
 /* ---------- Movimiento reducido ---------- */
 @media (prefers-reduced-motion: reduce) {
 	*, *::before, *::after {
@@ -1166,3 +1347,5 @@ body.focusing.idle { cursor: none; }
 		min-height: calc(100dvh - env(safe-area-inset-bottom) - env(safe-area-inset-top) - 86px);
 	}
 }
+
+.goal-of { color: var(--muted); font-weight: 600; }

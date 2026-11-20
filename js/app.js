@@ -30,16 +30,39 @@ const store = {
 	}
 }
 
-const todayKey = () => new Date().toISOString().slice(0, 10)
+const dayKey = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+const todayKey = () => dayKey(new Date())
 
 // ---------- Estado ----------
 const settings = Object.assign(
-	{ work: 25, short: 5, long: 15, rounds: 4, autoStart: true, topic: '', imageQuery: '', theme: 'theme-dark', bgUpload: null },
+	{
+		work: 25, short: 5, long: 15, rounds: 4, autoStart: true, topic: '', imageQuery: '', theme: 'theme-dark', bgUpload: null,
+		goal: 6, warnMinute: true, duckBreak: true, fullscreen: false
+	},
 	store.get('settings', {})
 )
 let tasks = store.get('tasks', [])
-let log = store.get('log', { date: todayKey(), items: [] })
-if (log.date !== todayKey()) log = { date: todayKey(), items: [] }
+// Historial de varios días: { 'AAAA-MM-DD': [{ time, topic, minutes, mood? }] }
+const history = store.get('history', {})
+{
+	// Migra el registro antiguo (solo guardaba el día actual)
+	const old = store.get('log', null)
+	if (old?.date && old.items?.length && !history[old.date]) history[old.date] = old.items
+}
+let log = { date: todayKey(), items: (history[todayKey()] ||= []) }
+
+function saveLog() {
+	history[log.date] = log.items
+	// Guarda hasta un año de historial
+	const keys = Object.keys(history).sort()
+	keys.slice(0, Math.max(0, keys.length - 366)).forEach(k => delete history[k])
+	store.set('history', history)
+}
+
+function rollDay() {
+	if (log.date === todayKey()) return
+	log = { date: todayKey(), items: (history[todayKey()] ||= []) }
+}
 let soundVolumes = store.get('volumes', {})
 
 let mode = 'work'
@@ -67,6 +90,23 @@ const el = {
 	long: $('#longMin'),
 	rounds: $('#rounds'),
 	autoStart: $('#autoStart'),
+	goal: $('#goal'),
+	warnMinute: $('#warnMinute'),
+	duckBreak: $('#duckBreak'),
+	fullscreen: $('#fullscreen'),
+	todayGoal: $('#todayGoal'),
+	goalText: $('#goalText'),
+	goalBar: $('#goalBar'),
+	goalFill: $('#goalFill'),
+	streak: $('#streak'),
+	streakNum: $('#streakNum'),
+	streakLabel: $('#streakLabel'),
+	week: $('#week'),
+	weekTotal: $('#weekTotal'),
+	byTopic: $('#byTopic'),
+	reflect: $('#reflect'),
+	reflectQ: $('#reflectQ'),
+	reflectTask: $('#reflectTask'),
 	time: $('#timeDisplay'),
 	ring: $('#ringProgress'),
 	play: $('#playBtn'),
@@ -263,7 +303,89 @@ function saveTasks() {
 	renderHeader()
 }
 
+// ---------- Progreso: meta diaria, racha, semana y temas ----------
+const fmtMin = m => (m >= 60 ? `${Math.floor(m / 60)} h${m % 60 ? ' ' + (m % 60) + ' min' : ''}` : `${m} min`)
+const DAY_LETTERS = ['D', 'L', 'M', 'M', 'J', 'V', 'S']
+
+function daysAgo(n) {
+	const d = new Date()
+	d.setDate(d.getDate() - n)
+	return d
+}
+
+function calcStreak() {
+	// Días seguidos con al menos un pomodoro. Si hoy aún no hiciste, cuenta desde ayer.
+	let n = 0
+	let i = history[todayKey()]?.length ? 0 : 1
+	while (history[dayKey(daysAgo(i))]?.length) {
+		n++
+		i++
+	}
+	return n
+}
+
+function renderProgress() {
+	const done = log.items.length
+	const goal = settings.goal
+	el.todayGoal.textContent = `/${goal}`
+	el.goalText.textContent = done >= goal ? `¡Meta cumplida! ${done} de ${goal}` : `${done} de ${goal} pomodoros`
+	el.goalFill.style.width = `${Math.min(100, (done / goal) * 100)}%`
+	el.goalBar.classList.toggle('full', done >= goal)
+	el.goalBar.setAttribute('aria-valuemax', goal)
+	el.goalBar.setAttribute('aria-valuenow', done)
+
+	const streak = calcStreak()
+	el.streak.hidden = streak < 1
+	el.streakNum.textContent = streak
+	el.streakLabel.textContent = streak === 1 ? 'día' : 'días seguidos'
+
+	// Últimos 7 días
+	const days = [...Array(7)].map((_, i) => {
+		const d = daysAgo(6 - i)
+		const items = history[dayKey(d)] || []
+		return { d, n: items.length, items }
+	})
+	const max = Math.max(goal, ...days.map(x => x.n))
+	el.week.innerHTML = ''
+	days.forEach(({ d, n }, i) => {
+		const col = document.createElement('div')
+		col.className = 'day' + (i === 6 ? ' today' : '') + (n >= goal ? ' met' : '')
+		col.title = `${d.toLocaleDateString('es', { weekday: 'long', day: 'numeric' })}: ${n} ${n === 1 ? 'pomodoro' : 'pomodoros'}`
+		col.innerHTML = `<span class="n">${n || ''}</span><span class="bar"><i style="height:${(n / max) * 100}%"></i></span><span class="l">${DAY_LETTERS[d.getDay()]}</span>`
+		el.week.appendChild(col)
+	})
+	const weekItems = days.flatMap(x => x.items)
+	const weekMin = weekItems.reduce((a, b) => a + b.minutes, 0)
+	el.weekTotal.textContent = weekItems.length
+		? `Esta semana: ${weekItems.length} pomodoros · ${fmtMin(weekMin)} de enfoque`
+		: 'Cuando termines pomodoros, aquí verás tu semana.'
+
+	// Tiempo por tema (7 días)
+	const topics = {}
+	weekItems.forEach(it => {
+		const k = it.topic || 'Sin tema'
+		topics[k] = (topics[k] || 0) + it.minutes
+	})
+	const top = Object.entries(topics).sort((a, b) => b[1] - a[1]).slice(0, 5)
+	const topMax = top[0]?.[1] || 1
+	el.byTopic.innerHTML = ''
+	top.forEach(([name, min]) => {
+		const li = document.createElement('li')
+		const b = document.createElement('b')
+		b.textContent = name
+		const t = document.createElement('span')
+		t.textContent = fmtMin(min)
+		const bar = document.createElement('i')
+		bar.style.width = `${(min / topMax) * 100}%`
+		li.append(b, t, bar)
+		el.byTopic.appendChild(li)
+	})
+}
+
+const MOOD_ICON = { 1: '😮‍💨', 2: '🙂', 3: '🔥' }
+
 function renderLog() {
+	renderProgress()
 	const done = log.items.length
 	el.todayNumber.textContent = done
 	el.logList.innerHTML = ''
@@ -289,6 +411,7 @@ function renderLog() {
 			time.textContent = item.time
 			const what = document.createElement('b')
 			what.textContent = item.topic || 'Sin tema'
+			if (item.mood) what.textContent += ' ' + MOOD_ICON[item.mood]
 			const mins = document.createElement('span')
 			mins.textContent = `${item.minutes} min`
 			li.append(time, what, mins)
@@ -352,9 +475,43 @@ peekBtn.addEventListener('click', () => {
 	renderFocus()
 })
 
+// ---------- Pantalla completa ----------
+const canFullscreen = () => document.fullscreenEnabled && matchMedia('(hover: hover)').matches
+let enteredFullscreen = false
+
+function requestFs() {
+	document.documentElement.requestFullscreen().then(() => (enteredFullscreen = true)).catch(() => {})
+}
+function enterFullscreen() {
+	if (canFullscreen() && !document.fullscreenElement) requestFs()
+}
+function exitFullscreen() {
+	if (enteredFullscreen && document.fullscreenElement) document.exitFullscreen().catch(() => {})
+	enteredFullscreen = false
+}
+function toggleFullscreen() {
+	if (document.fullscreenElement) exitFullscreen()
+	else if (document.fullscreenEnabled) requestFs()
+}
+
+// ---------- Sonidos más bajos en el descanso ----------
+function applyDuck() {
+	sounds.setMaster(settings.duckBreak && mode !== 'work' ? 0.35 : 1)
+}
+
 // ---------- Temporizador ----------
+let warned = false // el aviso de "falta 1 minuto" ya sonó en este bloque
+
 function tick() {
 	remaining = Math.max(0, Math.round((endAt - Date.now()) / 1000))
+	if (!warned && remaining <= 60 && remaining > 0 && totalSeconds() > 120) {
+		warned = true
+		if (settings.warnMinute) {
+			sounds.softBell()
+			el.ring.classList.add('warn')
+			setTimeout(() => el.ring.classList.remove('warn'), 2500)
+		}
+	}
 	renderTimer()
 	if (remaining <= 0) complete()
 }
@@ -365,6 +522,9 @@ function start() {
 	endAt = Date.now() + remaining * 1000
 	peek = false
 	setView('timer')
+	if (remaining <= 60) warned = true
+	if (mode === 'work') hideReflect()
+	if (settings.fullscreen) enterFullscreen()
 	ticker = setInterval(tick, 250)
 	if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission()
 	if (mode === 'work' && !settings.topic.trim()) toast('Escribe en qué vas a trabajar para tenerlo presente', 'pencil')
@@ -380,8 +540,15 @@ function pause() {
 	renderTimer()
 }
 
+// Pausa hecha por ti (botón o Espacio): también sale de pantalla completa
+function userPause() {
+	pause()
+	exitFullscreen()
+}
+
 function reset() {
 	pause()
+	warned = false
 	remaining = totalSeconds()
 	renderTimer()
 }
@@ -391,6 +558,8 @@ function setMode(newMode) {
 	const changed = mode !== newMode
 	mode = newMode
 	remaining = totalSeconds()
+	warned = false
+	applyDuck()
 	renderHeader()
 	if (changed) showQuote()
 }
@@ -412,20 +581,76 @@ function notify(title, body) {
 	} catch {}
 }
 
+// ---------- Cierre de cada pomodoro: ¿cómo te fue? ----------
+let reflectItem = null
+let reflectTimer
+
+function showReflect(item) {
+	reflectItem = item
+	el.reflectQ.textContent = item.topic ? `¿Cómo te fue con «${item.topic}»?` : '¿Cómo te fue este pomodoro?'
+	el.reflect.querySelectorAll('[data-mood]').forEach(b => b.classList.remove('on'))
+	const current = tasks.find(t => t.current && !t.done)
+	el.reflectTask.hidden = !current
+	if (current) {
+		el.reflectTask.textContent = `✓ Terminé «${current.text}»`
+		el.reflectTask.dataset.task = tasks.indexOf(current)
+	}
+	el.reflect.hidden = false
+	clearTimeout(reflectTimer)
+	reflectTimer = setTimeout(hideReflect, 90000)
+}
+
+function hideReflect() {
+	clearTimeout(reflectTimer)
+	el.reflect.hidden = true
+	reflectItem = null
+}
+
+el.reflect.querySelectorAll('[data-mood]').forEach(b =>
+	b.addEventListener('click', () => {
+		if (!reflectItem) return
+		reflectItem.mood = Number(b.dataset.mood)
+		saveLog()
+		renderLog()
+		el.reflect.querySelectorAll('[data-mood]').forEach(x => x.classList.toggle('on', x === b))
+		if (el.reflectTask.hidden) setTimeout(hideReflect, 900)
+	})
+)
+
+el.reflectTask.addEventListener('click', () => {
+	const t = tasks[Number(el.reflectTask.dataset.task)]
+	if (t) {
+		t.done = true
+		t.current = false
+		const next = tasks.find(x => !x.done)
+		if (next) next.current = true
+		saveTasks()
+		toast(next ? `Bien hecho. Siguiente: ${next.text}` : '¡Terminaste todas tus tareas!', 'check')
+	}
+	el.reflectTask.hidden = true
+	if (reflectItem?.mood) setTimeout(hideReflect, 600)
+})
+
 function complete() {
 	clearInterval(ticker)
 	endAt = null
 	sounds.chime()
 
 	if (mode === 'work') {
+		rollDay()
 		const now = new Date()
-		log.items.push({
+		const item = {
 			time: now.toTimeString().slice(0, 5),
 			topic: settings.topic.trim(),
 			minutes: settings.work
-		})
-		store.set('log', log)
+		}
+		log.items.push(item)
+		saveLog()
 		renderLog()
+		if (log.items.length === settings.goal) {
+			setTimeout(() => toast(`¡Cumpliste tu meta de hoy: ${settings.goal} pomodoros!`, 'trophy'), 3600)
+		}
+		showReflect(item)
 	}
 
 	const finished = mode
@@ -702,6 +927,20 @@ document.querySelectorAll('[data-preset]').forEach(b =>
 	})
 )
 
+bindNumber(el.goal, 'goal', 1, 24)
+
+;['warnMinute', 'duckBreak', 'fullscreen'].forEach(key => {
+	el[key].checked = settings[key]
+	el[key].addEventListener('change', () => {
+		settings[key] = el[key].checked
+		saveSettings()
+		if (key === 'duckBreak') applyDuck()
+	})
+})
+// Pantalla completa y atajos solo tienen sentido en computadora
+if (!canFullscreen()) $('#fullscreenOpt').hidden = true
+if (!matchMedia('(hover: hover)').matches) $('#shortcuts').hidden = true
+
 el.autoStart.checked = settings.autoStart
 el.autoStart.addEventListener('change', () => {
 	settings.autoStart = el.autoStart.checked
@@ -868,7 +1107,7 @@ el.taskForm.addEventListener('submit', e => {
 
 el.play.addEventListener('click', () => {
 	sounds.click()
-	isRunning() ? pause() : start()
+	isRunning() ? userPause() : start()
 })
 el.reset.addEventListener('click', () => {
 	sounds.click()
@@ -896,12 +1135,37 @@ document.addEventListener('keydown', e => {
 		renderFocus()
 		return
 	}
-	if (e.code !== 'Space') return
 	const tag = document.activeElement?.tagName
-	if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'BUTTON') return
-	e.preventDefault()
-	isRunning() ? pause() : start()
+	if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+	if (e.ctrlKey || e.metaKey || e.altKey) return
+
+	if (e.code === 'Space') {
+		if (tag === 'BUTTON') return
+		e.preventDefault()
+		isRunning() ? userPause() : start()
+		return
+	}
+	const key = e.key.toLowerCase()
+	if (key === 'r') {
+		sounds.click()
+		reset()
+		toast('Reiniciado', 'clock')
+	} else if (key === 's') {
+		skip()
+	} else if (key === 'm') {
+		if (sounds.activeCount()) {
+			$('#stopSoundsBtn').click()
+			toast('Sonidos silenciados', 'mute')
+		}
+	} else if (key === 'f') {
+		toggleFullscreen()
+	}
 })
+
+// ---------- App instalable (PWA) ----------
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+	window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}))
+}
 
 // ---------- Inicio ----------
 applyTheme()

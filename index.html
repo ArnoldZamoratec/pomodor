@@ -5,6 +5,9 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 		<meta name="theme-color" content="#1e1714" />
 		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+		<meta name="apple-mobile-web-app-title" content="Focus Timer" />
+		<link rel="manifest" href="manifest.webmanifest" />
 		<meta name="mobile-web-app-capable" content="yes" />
 		<title>Focus Timer</title>
 
@@ -44,6 +47,8 @@
 			<symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5M12 3v12"/></symbol>
 			<symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></symbol>
 			<symbol id="i-panels" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></symbol>
+			<symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M8 17v-4M13 17V8M18 17v-7"/></symbol>
+			<symbol id="i-keyboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 13h.01M18 13h.01M8 16h8"/></symbol>
 			<symbol id="i-clock"viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
 		</svg>
 		<div class="bg" id="bg"></div>
@@ -57,7 +62,7 @@
 			<div class="topbar-actions">
 				<span class="today-count" id="todayCount" title="Pomodoros completados hoy">
 					<svg class="ic" width="22" height="22" aria-hidden="true"><use href="#i-brand"/></svg>
-					<b id="todayNumber">0</b> hoy
+					<span><b id="todayNumber">0</b><span id="todayGoal" class="goal-of">/6</span></span> hoy
 				</span>
 				<button class="icon-btn peek-btn" id="peekBtn" aria-label="Mostrar secciones" title="Mostrar secciones">
 					<svg class="ic" width="24" height="24" aria-hidden="true"><use href="#i-panels"/></svg>
@@ -126,10 +131,29 @@
 					<button class="chip" data-preset="90,15,30">90 / 15</button>
 				</div>
 
-				<label class="check">
-					<input type="checkbox" id="autoStart" checked />
-					<span>Empezar el siguiente bloque solo</span>
+				<label class="field goal-field">
+					<span>Meta diaria</span>
+					<div class="unit"><input id="goal" type="number" min="1" max="24" value="6" /><i>pomodoros</i></div>
 				</label>
+
+				<div class="options">
+					<label class="check">
+						<input type="checkbox" id="autoStart" checked />
+						<span>Empezar el siguiente bloque solo</span>
+					</label>
+					<label class="check">
+						<input type="checkbox" id="warnMinute" checked />
+						<span>Aviso suave cuando falte 1 minuto</span>
+					</label>
+					<label class="check">
+						<input type="checkbox" id="duckBreak" checked />
+						<span>Bajar los sonidos en los descansos</span>
+					</label>
+					<label class="check" id="fullscreenOpt">
+						<input type="checkbox" id="fullscreen" />
+						<span>Pantalla completa al iniciar</span>
+					</label>
+				</div>
 
 				<h3><svg class="ic" width="24" height="24" aria-hidden="true"><use href="#i-list"/></svg> Tareas</h3>
 				<form class="row" id="taskForm">
@@ -139,6 +163,18 @@
 					</button>
 				</form>
 				<ul class="tasks" id="taskList"></ul>
+
+				<div class="shortcuts" id="shortcuts">
+					<h3><svg class="ic" width="24" height="24" aria-hidden="true"><use href="#i-keyboard"/></svg> Atajos</h3>
+					<dl>
+						<dt><kbd>Espacio</kbd></dt><dd>Iniciar / pausar</dd>
+						<dt><kbd>R</kbd></dt><dd>Reiniciar</dd>
+						<dt><kbd>S</kbd></dt><dd>Saltar bloque</dd>
+						<dt><kbd>M</kbd></dt><dd>Silenciar sonidos</dd>
+						<dt><kbd>F</kbd></dt><dd>Pantalla completa</dd>
+						<dt><kbd>Esc</kbd></dt><dd>Ver secciones sin pausar</dd>
+					</dl>
+				</div>
 			</aside>
 
 			<!-- ========== TEMPORIZADOR ========== -->
@@ -188,6 +224,16 @@
 					</button>
 				</div>
 
+				<div class="reflect" id="reflect" hidden>
+					<p class="reflect-q" id="reflectQ">¿Cómo te fue?</p>
+					<div class="reflect-moods" role="group" aria-label="Cómo te fue">
+						<button data-mood="1"><span>😮‍💨</span>Me costó</button>
+						<button data-mood="2"><span>🙂</span>Bien</button>
+						<button data-mood="3"><span>🔥</span>Muy bien</button>
+					</div>
+					<button class="reflect-task" id="reflectTask" hidden></button>
+				</div>
+
 				<figure class="quote" id="quote" title="Clic para otra frase">
 					<blockquote id="quoteText">Empieza. El resto se ordena por el camino.</blockquote>
 					<figcaption id="quoteAuthor"></figcaption>
@@ -202,6 +248,20 @@
 				<button class="wide-btn" id="stopSoundsBtn">
 					<svg class="ic" width="22" height="22" aria-hidden="true"><use href="#i-mute"/></svg> Silenciar todo
 				</button>
+
+				<h3><svg class="ic" width="24" height="24" aria-hidden="true"><use href="#i-chart"/></svg> Tu progreso</h3>
+				<div class="progress">
+					<div class="goal">
+						<div class="goal-top">
+							<span id="goalText">0 de 6 pomodoros</span>
+							<span class="streak" id="streak" hidden><svg class="ic" width="18" height="18" aria-hidden="true"><use href="#i-flame"/></svg><b id="streakNum">0</b> <span id="streakLabel">días seguidos</span></span>
+						</div>
+						<div class="goal-bar" role="progressbar" aria-label="Meta diaria" aria-valuemin="0" id="goalBar"><i id="goalFill"></i></div>
+					</div>
+					<div class="week" id="week" aria-label="Pomodoros de los últimos 7 días"></div>
+					<p class="week-total" id="weekTotal"></p>
+					<ul class="by-topic" id="byTopic"></ul>
+				</div>
 
 				<h3><svg class="ic" width="24" height="24" aria-hidden="true"><use href="#i-calendar"/></svg> Hoy hiciste</h3>
 				<ul class="log" id="logList"></ul>

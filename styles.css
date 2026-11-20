@@ -1349,3 +1349,35 @@ body.focusing.idle { cursor: none; }
 }
 
 .goal-of { color: var(--muted); font-weight: 600; }
+
+/* Contador de arriba: lleva a tu progreso */
+button.today-count { font: inherit; color: inherit; cursor: pointer; transition: border-color 0.2s; }
+button.today-count:hover { border-color: var(--accent); }
+
+/* Copia de seguridad */
+.backup { display: flex; gap: 8px; flex-wrap: wrap; }
+.mini-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 8px 12px;
+	border-radius: var(--r-control);
+	background: var(--input);
+	border: 1px solid var(--input-border);
+	font-size: 0.85rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: border-color 0.2s;
+}
+.mini-btn:hover { border-color: var(--accent); }
+
+/* Mientras está la tarjeta "¿Cómo te fue?", la frase cede su lugar */
+.center:has(.reflect:not([hidden])) .quote { display: none; }
+
+@media (max-width: 720px) {
+	.center:has(.reflect:not([hidden])) .clock { width: min(60vw, 28dvh); min-width: 170px; }
+	.center:has(.reflect:not([hidden])) .time { font-size: clamp(2.8rem, 13vw, 3.8rem); }
+	.reflect { padding: 12px 14px; gap: 9px; }
+	.reflect-moods button { padding: 8px 4px; }
+	.reflect-moods button span { font-size: 1.35rem; }
+}

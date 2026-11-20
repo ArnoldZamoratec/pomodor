@@ -3,7 +3,7 @@
 // - Imágenes, sonidos y fuentes: primero la copia guardada (no cambian).
 // Al cambiar archivos del "esqueleto", sube VERSION para renovar la caché.
 
-const VERSION = 'v1'
+const VERSION = 'v2'
 const CACHE = `focus-timer-${VERSION}`
 
 const SOUNDS = ['rain', 'forest', 'fire', 'coffee', 'waves', 'wind', 'fan', 'clock', 'white', 'pink', 'brown']
@@ -68,7 +68,8 @@ self.addEventListener('fetch', e => {
 async function networkFirst(req) {
 	const cache = await caches.open(CACHE)
 	try {
-		const res = await fetch(req)
+		// no-cache: siempre pregunta al servidor si hay una versión nueva
+		const res = await fetch(new Request(req.url, { cache: 'no-cache', credentials: 'same-origin' }))
 		if (res.ok) cache.put(req, res.clone())
 		return res
 	} catch {

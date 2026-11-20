@@ -475,6 +475,63 @@ peekBtn.addEventListener('click', () => {
 	renderFocus()
 })
 
+// ---------- Ir al progreso desde el contador de arriba ----------
+$('#todayCount').addEventListener('click', () => {
+	peek = true
+	renderFocus()
+	setView('sounds')
+	requestAnimationFrame(() => $('#progressTitle').scrollIntoView({ behavior: 'smooth', block: 'start' }))
+})
+
+// ---------- Copia de seguridad (exportar / importar) ----------
+$('#exportBtn').addEventListener('click', () => {
+	const data = {
+		app: 'focus-timer',
+		version: 1,
+		exported: new Date().toISOString(),
+		history,
+		tasks,
+		settings: { ...settings, bgUpload: null },
+		volumes: soundVolumes
+	}
+	const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+	const a = document.createElement('a')
+	a.href = URL.createObjectURL(blob)
+	a.download = `focus-timer-${todayKey()}.json`
+	a.click()
+	setTimeout(() => URL.revokeObjectURL(a.href), 1000)
+	toast('Copia guardada en tus descargas', 'download')
+})
+
+$('#importInput').addEventListener('change', async e => {
+	const file = e.target.files[0]
+	e.target.value = ''
+	if (!file) return
+	try {
+		const data = JSON.parse(await file.text())
+		if (data.app !== 'focus-timer' || typeof data.history !== 'object') throw new Error()
+		// Une el historial: por cada día se queda con el registro más completo
+		let days = 0
+		for (const [day, items] of Object.entries(data.history)) {
+			if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || !Array.isArray(items)) continue
+			if (!history[day] || items.length > history[day].length) {
+				history[day] = items
+				days++
+			}
+		}
+		store.set('history', history)
+		if (Array.isArray(data.tasks) && data.tasks.length) store.set('tasks', data.tasks)
+		if (data.settings && typeof data.settings === 'object') {
+			store.set('settings', { ...settings, ...data.settings, bgUpload: settings.bgUpload })
+		}
+		if (data.volumes && typeof data.volumes === 'object') store.set('volumes', data.volumes)
+		toast(`Copia restaurada (${days} ${days === 1 ? 'día' : 'días'} de historial). Recargando…`, 'check')
+		setTimeout(() => location.reload(), 1600)
+	} catch {
+		toast('Ese archivo no es una copia de Focus Timer', 'x')
+	}
+})
+
 // ---------- Pantalla completa ----------
 const canFullscreen = () => document.fullscreenEnabled && matchMedia('(hover: hover)').matches
 let enteredFullscreen = false

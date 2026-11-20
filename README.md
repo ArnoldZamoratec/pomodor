@@ -14,6 +14,7 @@ Temporizador pomodoro con fondo según tu tema, sonidos ambientales y frases mot
 - **Tu progreso**: meta diaria, racha de días seguidos, gráfico de la semana y tiempo por tema (se guarda hasta un año).
 - **¿Cómo te fue?**: al terminar cada pomodoro marcas cómo te fue y si terminaste la tarea actual.
 - **Aviso suave** cuando falta 1 minuto y **sonidos más bajos** en los descansos (opcionales).
+- **Copia de seguridad**: guarda tu progreso en un archivo y restáuralo en otro navegador o dispositivo.
 - **App instalable** (PWA): se puede añadir a la pantalla de inicio y funciona sin internet.
 - Tema claro/oscuro y pantalla completa opcional.
 

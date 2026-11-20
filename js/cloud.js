@@ -18,7 +18,7 @@ const firebaseConfig = {
 }
 
 // Datos que se guardan en la cuenta (claves de localStorage con prefijo ft:)
-export const SYNC_KEYS = ['history', 'tasks', 'settings', 'volumes']
+export const SYNC_KEYS = ['history', 'tasks', 'settings', 'volumes', 'notes']
 
 let fb = null // { auth, db, A (auth fns), F (firestore fns) }
 

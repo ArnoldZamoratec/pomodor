@@ -82,6 +82,7 @@ const settings = Object.assign(
 	store.get('settings', {})
 )
 let tasks = store.get('tasks', [])
+let notes = store.get('notes', []) // "Para después": ideas que aparecen en pleno enfoque
 // Historial de varios días: { 'AAAA-MM-DD': [{ time, topic, minutes, mood? }] }
 const history = store.get('history', {})
 {
@@ -264,9 +265,16 @@ function renderHeader() {
 	const topic = settings.topic.trim()
 	const current = tasks.find(t => t.current && !t.done)
 	if (mode === 'work') {
-		el.nowLabel.textContent = current ? `Tarea actual: ${current.text}` : 'Ahora estoy haciendo'
-		el.nowTopic.textContent = topic || 'Escribe tu tema a la izquierda'
-		setIcon(el.nowIcon, topic ? 'target' : 'pencil')
+		// Lo concreto manda: la tarea actual es el título; la materia, el contexto
+		if (current) {
+			el.nowLabel.textContent = topic ? `${topic} · ahora` : 'Ahora'
+			el.nowTopic.textContent = current.text
+		} else {
+			el.nowLabel.textContent = topic || 'Ahora estoy haciendo'
+			el.nowTopic.textContent = topic ? 'Elige tu primer paso concreto' : '¿Qué es lo primero que vas a hacer?'
+		}
+		el.nowTopic.parentElement.classList.toggle('prompt', !current)
+		setIcon(el.nowIcon, current || topic ? 'target' : 'pencil')
 	} else if (mode === 'short') {
 		el.nowLabel.textContent = 'Tiempo de descanso'
 		el.nowTopic.textContent = 'Respira y toma agua'
@@ -291,7 +299,7 @@ function renderHeader() {
 function renderTasks() {
 	el.taskList.innerHTML = ''
 	if (!tasks.length) {
-		el.taskList.innerHTML = '<li class="empty">Divide tu tema en pasos pequeños y añádelos aquí.</li>'
+		el.taskList.innerHTML = '<li class="empty">Escribe el primer paso, algo que puedas empezar ya. Ej: “Leer páginas 40–52”.</li>'
 		return
 	}
 	tasks.forEach((t, i) => {
@@ -321,6 +329,21 @@ function renderTasks() {
 			saveTasks()
 		})
 
+		// Pomodoros: hechos / estimados. Tocar cambia la estimación (1 → 6 → sin estimar)
+		const est = document.createElement('button')
+		est.className = 'est'
+		const doneP = t.pomos || 0
+		const goalP = t.est || 0
+		est.textContent = goalP ? `🍅 ${doneP}/${goalP}` : doneP ? `🍅 ${doneP}` : '🍅 ?'
+		est.classList.toggle('over', goalP > 0 && doneP > goalP)
+		est.title = 'Toca para estimar cuántos pomodoros te tomará'
+		est.setAttribute('aria-label', `Pomodoros de ${t.text}: ${doneP} hechos${goalP ? ' de ' + goalP : ''}. Cambiar estimación`)
+		est.addEventListener('click', () => {
+			t.est = ((t.est || 0) % 6) + 1
+			if (t.est === 1 && goalP === 6) t.est = 0
+			saveTasks()
+		})
+
 		const del = document.createElement('button')
 		del.innerHTML =
 			'<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>'
@@ -330,9 +353,49 @@ function renderTasks() {
 			saveTasks()
 		})
 
-		li.append(cb, span, del)
+		li.append(cb, span, est, del)
 		el.taskList.appendChild(li)
 	})
+}
+
+function renderNotes() {
+	const list = $('#noteList')
+	list.innerHTML = ''
+	if (!notes.length) {
+		list.innerHTML = '<li class="empty">Nada pendiente. Tu cabeza, libre.</li>'
+		return
+	}
+	notes.forEach((n, i) => {
+		const li = document.createElement('li')
+		const span = document.createElement('span')
+		span.textContent = n.text
+		const toTask = document.createElement('button')
+		toTask.innerHTML = icon('plus', 15)
+		toTask.title = 'Convertir en tarea'
+		toTask.setAttribute('aria-label', `Convertir en tarea: ${n.text}`)
+		toTask.addEventListener('click', () => {
+			tasks.push({ text: n.text, done: false, current: !tasks.some(t => t.current && !t.done) })
+			notes.splice(i, 1)
+			saveNotes()
+			saveTasks()
+			toast('Ahora es una tarea', 'list')
+		})
+		const del = document.createElement('button')
+		del.innerHTML = icon('x', 12)
+		del.title = 'Listo, borrar'
+		del.setAttribute('aria-label', `Borrar: ${n.text}`)
+		del.addEventListener('click', () => {
+			notes.splice(i, 1)
+			saveNotes()
+		})
+		li.append(span, toTask, del)
+		list.appendChild(li)
+	})
+}
+
+function saveNotes() {
+	store.set('notes', notes)
+	renderNotes()
 }
 
 function saveTasks() {
@@ -373,6 +436,8 @@ function renderProgress() {
 	el.goalBar.setAttribute('aria-valuenow', done)
 
 	const streak = calcStreak()
+	$('#chipStreak').hidden = streak < 2
+	$('#chipStreakNum').textContent = streak
 	el.streak.hidden = streak < 1
 	el.streakNum.textContent = streak
 	el.streakLabel.textContent = streak === 1 ? 'día' : 'días seguidos'
@@ -517,9 +582,74 @@ peekBtn.addEventListener('click', () => {
 $('#todayCount').addEventListener('click', () => {
 	peek = true
 	renderFocus()
-	setView('sounds')
+	setView('progress')
 	requestAnimationFrame(() => $('#progressTitle').scrollIntoView({ behavior: 'smooth', block: 'start' }))
 })
+
+// ---------- Tocar el título vacío lleva a escribir tu primer paso ----------
+el.nowTopic.parentElement.addEventListener('click', () => {
+	if (!el.nowTopic.parentElement.classList.contains('prompt') || isRunning()) return
+	setView('session')
+	const target = settings.topic.trim() ? $('#taskInput') : el.topic
+	target.scrollIntoView({ behavior: 'smooth', block: 'center' })
+	setTimeout(() => target.focus(), 250)
+})
+
+// ---------- Ajustes en un diálogo ----------
+const settingsDlg = $('#settingsDlg')
+function openSettings() {
+	if (isRunning()) {
+		peek = true
+		renderFocus()
+	}
+	settingsDlg.showModal()
+}
+$('#settingsBtn').addEventListener('click', openSettings)
+document.querySelectorAll('[data-open-settings]').forEach(b => b.addEventListener('click', openSettings))
+$('#settingsClose').addEventListener('click', () => settingsDlg.close())
+// Clic fuera del contenido cierra
+settingsDlg.addEventListener('click', e => {
+	if (e.target === settingsDlg) settingsDlg.close()
+})
+
+// ---------- Anotar para después (descarga mental en pleno enfoque) ----------
+const jotForm = $('#jotForm')
+const jotInput = $('#jotInput')
+const jotBtn = $('#jotBtn')
+let notesThisBlock = 0
+
+function openJot() {
+	jotBtn.hidden = true
+	jotForm.hidden = false
+	document.body.classList.add('jotting')
+	jotInput.focus()
+}
+function closeJot() {
+	jotForm.hidden = true
+	jotBtn.hidden = false
+	jotInput.value = ''
+	document.body.classList.remove('jotting')
+	jotInput.blur()
+}
+jotBtn.addEventListener('click', openJot)
+jotForm.addEventListener('submit', e => {
+	e.preventDefault()
+	const text = jotInput.value.trim()
+	if (text) {
+		notes.push({ text, at: Date.now() })
+		if (mode === 'work' && isRunning()) notesThisBlock++
+		saveNotes()
+		toast('Anotado. Vuelve a lo tuyo', 'check')
+	}
+	closeJot()
+})
+jotInput.addEventListener('keydown', e => {
+	if (e.key === 'Escape') {
+		e.stopPropagation()
+		closeJot()
+	}
+})
+jotInput.addEventListener('blur', () => setTimeout(() => !jotInput.value.trim() && !jotForm.hidden && closeJot(), 150))
 
 // ---------- Pantalla completa ----------
 const canFullscreen = () => document.fullscreenEnabled && matchMedia('(hover: hover)').matches
@@ -587,7 +717,9 @@ function pause() {
 }
 
 // Pausa hecha por ti (botón o Espacio): también sale de pantalla completa
+let blockPauses = 0 // interrupciones del pomodoro actual (se muestran al final, sin regaños)
 function userPause() {
+	if (mode === 'work' && isRunning()) blockPauses++
 	pause()
 	exitFullscreen()
 }
@@ -633,23 +765,39 @@ let reflectTimer
 
 function showReflect(item) {
 	reflectItem = item
-	el.reflectQ.textContent = item.topic ? `¿Cómo te fue con «${item.topic}»?` : '¿Cómo te fue este pomodoro?'
+	const what = item.task || item.topic
+	el.reflectQ.textContent = what ? `¿Cómo te fue con «${what}»?` : '¿Cómo te fue este pomodoro?'
 	el.reflect.querySelectorAll('[data-mood]').forEach(b => b.classList.remove('on'))
 	const current = tasks.find(t => t.current && !t.done)
 	el.reflectTask.hidden = !current
 	if (current) {
 		el.reflectTask.textContent = `✓ Terminé «${current.text}»`
+		el.reflectTask.title = 'Márcala como hecha y pasa a la siguiente'
 		el.reflectTask.dataset.task = tasks.indexOf(current)
 	}
+	const meta = []
+	if (item.notes) meta.push(`💭 Anotaste ${item.notes} ${item.notes === 1 ? 'cosa' : 'cosas'} para después`)
+	if (item.pauses) meta.push(`⏸ ${item.pauses} ${item.pauses === 1 ? 'pausa' : 'pausas'}`)
+	const reflectMeta = $('#reflectMeta')
+	reflectMeta.hidden = !meta.length
+	reflectMeta.textContent = meta.join(' · ')
 	el.reflect.hidden = false
 	clearTimeout(reflectTimer)
 	reflectTimer = setTimeout(hideReflect, 90000)
+}
+
+let accountPending = false
+function flushAccountAsk() {
+	if (!accountPending || currentUser) return
+	accountPending = false
+	askAccount('first')
 }
 
 function hideReflect() {
 	clearTimeout(reflectTimer)
 	el.reflect.hidden = true
 	reflectItem = null
+	setTimeout(flushAccountAsk, 700)
 }
 
 el.reflect.querySelectorAll('[data-mood]').forEach(b =>
@@ -685,11 +833,20 @@ function complete() {
 	if (mode === 'work') {
 		rollDay()
 		const now = new Date()
+		const current = tasks.find(t => t.current && !t.done)
 		const item = {
 			time: now.toTimeString().slice(0, 5),
 			topic: settings.topic.trim(),
 			minutes: settings.work
 		}
+		if (current) {
+			item.task = current.text
+			current.pomos = (current.pomos || 0) + 1
+			store.set('tasks', tasks)
+			renderTasks()
+		}
+		if (blockPauses) item.pauses = blockPauses
+		item.notes = notesThisBlock
 		log.items.push(item)
 		saveLog()
 		renderLog()
@@ -697,6 +854,14 @@ function complete() {
 			setTimeout(() => toast(`¡Cumpliste tu meta de hoy: ${settings.goal} pomodoros!`, 'trophy'), 3600)
 		}
 		showReflect(item)
+		blockPauses = 0
+		notesThisBlock = 0
+		// Primer pomodoro como invitado: ahora sí, pedir la cuenta
+		// (espera a que responda "¿Cómo te fue?", o 20 s como máximo)
+		if (!currentUser && cloudReady) {
+			accountPending = true
+			setTimeout(flushAccountAsk, 20000)
+		}
 	}
 
 	const finished = mode
@@ -875,10 +1040,12 @@ async function loadBackground(announce = false) {
 }
 
 // ---------- Sonidos ----------
+const FAVORITE_SOUNDS = ['rain', 'coffee', 'fire', 'brown']
+
 function renderSounds() {
 	SOUND_LIST.forEach(s => {
 		const card = document.createElement('div')
-		card.className = 'sound'
+		card.className = 'sound' + (FAVORITE_SOUNDS.includes(s.id) ? '' : ' extra')
 		const btn = document.createElement('button')
 		btn.className = 'photo'
 		btn.style.backgroundImage = `url("img/sounds/${s.id}.jpg")`
@@ -912,6 +1079,16 @@ function renderSounds() {
 		card.append(btn, range)
 		el.soundGrid.appendChild(card)
 	})
+
+	const more = $('#moreSoundsBtn')
+	const extra = SOUND_LIST.length - FAVORITE_SOUNDS.length
+	const setMore = open => {
+		el.soundGrid.classList.toggle('show-all', open)
+		more.setAttribute('aria-expanded', String(open))
+		more.textContent = open ? 'Menos sonidos' : `Más sonidos (${extra})`
+	}
+	setMore(false)
+	more.addEventListener('click', () => setMore(!el.soundGrid.classList.contains('show-all')))
 
 	$('#stopSoundsBtn').addEventListener('click', () => {
 		sounds.stopAll()
@@ -1173,7 +1350,7 @@ document.addEventListener('keydown', e => {
 		renderFocus()
 		return
 	}
-	if (document.body.classList.contains('locked')) return
+	if (document.body.classList.contains('locked') || settingsDlg.open) return
 	const tag = document.activeElement?.tagName
 	if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
 	if (e.ctrlKey || e.metaKey || e.altKey) return
@@ -1198,6 +1375,9 @@ document.addEventListener('keydown', e => {
 		}
 	} else if (key === 'f') {
 		toggleFullscreen()
+	} else if (key === 'n') {
+		e.preventDefault()
+		openJot()
 	}
 })
 
@@ -1213,6 +1393,7 @@ showQuote()
 el.quote.addEventListener('click', showQuote)
 renderSounds()
 renderTasks()
+renderNotes()
 renderLog()
 renderHeader()
 renderGallery()
@@ -1251,6 +1432,7 @@ function showAuth(part) {
 function unlock() {
 	document.body.classList.remove('locked')
 	auth.box.hidden = true
+	busy(false)
 }
 
 function setAuthMode(m) {
@@ -1339,11 +1521,49 @@ $('#logoutBtn').addEventListener('click', async () => {
 })
 
 function renderAccount(user) {
+	const guest = !user
+	$('#account').classList.toggle('guest', guest)
+	$('#accountCta').hidden = !guest
+	$('#logoutBtn').hidden = guest
+	if (guest) {
+		$('#accountName').textContent = 'Sin cuenta'
+		$('#accountAvatar').textContent = '?'
+		$('#syncText').textContent = 'Solo en este navegador'
+		$('#syncStatus').dataset.state = 'offline'
+		return
+	}
 	const name = user.displayName || user.email.split('@')[0]
 	$('#accountName').textContent = name
 	$('#accountAvatar').textContent = name.trim()[0]?.toUpperCase() || '?'
 	$('#account').title = user.email
 }
+
+// Pide la cuenta. 'first': tras el primer pomodoro (obligatorio). 'manual': el usuario la pidió (se puede cerrar).
+function askAccount(reason) {
+	const required = reason !== 'manual'
+	$('#authBadge').hidden = reason !== 'first'
+	$('#authClose').hidden = required
+	auth.box.dataset.required = String(required)
+	if (reason === 'first') {
+		setAuthMode('register')
+		auth.title.textContent = 'Guarda tu racha'
+		auth.sub.textContent = 'Crea tu cuenta gratis para no perder este pomodoro ni los que vienen, en cualquier dispositivo.'
+	} else if (reason === 'return') {
+		setAuthMode('register')
+		auth.title.textContent = 'Tu progreso te espera'
+		auth.sub.textContent = 'Crea tu cuenta o inicia sesión para seguir sumando a tu racha.'
+	} else setAuthMode(authMode)
+	showAuth('form')
+}
+
+$('#accountCta').addEventListener('click', () => askAccount('manual'))
+$('#authClose').addEventListener('click', () => {
+	if (auth.box.dataset.required === 'true') return
+	unlock()
+})
+auth.box.addEventListener('keydown', e => {
+	if (e.key === 'Escape' && auth.box.dataset.required !== 'true') unlock()
+})
 
 // Une lo guardado en la nube con lo de este dispositivo
 function mergeRemote(remote) {
@@ -1356,7 +1576,7 @@ function mergeRemote(remote) {
 	}
 	if (JSON.stringify(merged) !== JSON.stringify(localHist)) changed = true
 	const writes = { history: merged }
-	for (const k of ['tasks', 'settings', 'volumes']) {
+	for (const k of ['tasks', 'settings', 'volumes', 'notes']) {
 		if (remote?.[k] == null) continue
 		let v = remote[k]
 		if (k === 'settings') v = { ...store.get('settings', {}), ...v, bgUpload: settings.bgUpload }
@@ -1368,26 +1588,29 @@ function mergeRemote(remote) {
 	return { changed, writes }
 }
 
+let cloudReady = false
+const hasProgress = () => Object.values(store.get('history', {})).some(d => d.length)
+
 async function startAuth() {
-	// Ya hubo sesión en este dispositivo y no hay internet: deja usar la app
-	const knownUid = localStorage.getItem('ft:uid')
-	showAuth('loading')
+	// La app se usa de inmediato. La cuenta se pide después del primer pomodoro.
+	renderAccount(null)
 	try {
 		await cloud.loadFirebase()
 	} catch {
-		if (knownUid) {
-			unlock()
-			setSync('offline')
-		} else showAuth('offline')
+		// Sin internet: se puede seguir; se pedirá la cuenta cuando vuelva la conexión
+		setSync('offline')
 		return
 	}
+	cloudReady = true
 
 	cloud.onUser(async user => {
 		if (!user) {
 			currentUser = null
-			setAuthMode(authMode)
-			showAuth('form')
+			renderAccount(null)
 			busy(false)
+			// Ya hizo pomodoros sin cuenta: ahora es obligatorio registrarse
+			if (hasProgress()) askAccount('return')
+			else unlock()
 			return
 		}
 		showAuth('loading')
@@ -1413,6 +1636,7 @@ async function startAuth() {
 			setSync(navigator.onLine ? 'error' : 'offline', e)
 		}
 		unlock()
+		renderAccount(user)
 		if (firstTime) toast(`Hola${user.displayName ? ', ' + user.displayName : ''}. Tu progreso se guarda en tu cuenta.`, 'check')
 	})
 }

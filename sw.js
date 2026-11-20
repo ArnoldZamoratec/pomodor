@@ -3,7 +3,7 @@
 // - Imágenes, sonidos y fuentes: primero la copia guardada (no cambian).
 // Al cambiar archivos del "esqueleto", sube VERSION para renovar la caché.
 
-const VERSION = 'v4'
+const VERSION = 'v6'
 const CACHE = `focus-timer-${VERSION}`
 
 const SOUNDS = ['rain', 'forest', 'fire', 'coffee', 'waves', 'wind', 'fan', 'clock', 'white', 'pink', 'brown']
@@ -23,6 +23,8 @@ const SHELL = [
 	'favicons/apple-touch-icon.png',
 	'favicons/android-chrome-192x192.png',
 	'favicons/android-chrome-512x512.png',
+	'img/tomato.png',
+	'favicons/maskable-512x512.png',
 	...SOUNDS.map(s => `img/sounds/${s}.jpg`)
 ]
 

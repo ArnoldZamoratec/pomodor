@@ -23,10 +23,10 @@
 		/>
 		<link rel="stylesheet" href="styles.css" />
 	</head>
-	<body data-mode="work" data-view="timer" class="locked">
+	<body data-mode="work" data-view="timer">
 		<!-- Iconos de línea (estilo Lucide) -->
 		<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-			<symbol id="i-brand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13.5" r="8"/><path d="M12 13.5V10M12 5.5V2.5M8.5 6.5C10 4.8 11 4.6 12 5.5c1-.9 2-.7 3.5 1"/></symbol>
+			<symbol id="i-brand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9" opacity=".3"/><path d="M12 3a9 9 0 1 1-9 9"/><circle cx="12" cy="12" r="1.7" fill="currentColor" stroke="none"/></symbol>
 			<symbol id="i-pencil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></symbol>
 			<symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7.5"/><path d="m21 21-4.5-4.5"/></symbol>
 			<symbol id="i-shuffle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22"/><path d="m18 2 4 4-4 4"/><path d="M2 6h1.9c1.5 0 2.9.9 3.6 2.2"/><path d="M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8"/><path d="m18 14 4 4-4 4"/></symbol>
@@ -50,6 +50,9 @@
 			<symbol id="i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></symbol>
 			<symbol id="i-cloud" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></symbol>
 			<symbol id="i-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/></symbol>
+			<symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol>
+			<symbol id="i-bubble" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></symbol>
+			<symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
 			<symbol id="i-clock"viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
 		</svg>
 		<div class="bg" id="bg"></div>
@@ -57,13 +60,17 @@
 
 		<header class="topbar">
 			<div class="brand">
-				<svg class="ic" width="34" height="34" aria-hidden="true"><use href="#i-brand"/></svg>
+				<img class="logo" src="img/tomato.png" width="30" height="30" alt="" />
 				<span>Focus Timer</span>
 			</div>
 			<div class="topbar-actions">
 				<button class="today-count" id="todayCount" title="Ver tu progreso" aria-label="Pomodoros de hoy. Ver tu progreso">
 					<svg class="ic" width="22" height="22" aria-hidden="true"><use href="#i-brand"/></svg>
 					<span><b id="todayNumber">0</b><span id="todayGoal" class="goal-of">/6</span></span> hoy
+					<span class="chip-streak" id="chipStreak" hidden><svg class="ic" width="16" height="16" aria-hidden="true"><use href="#i-flame"/></svg><b id="chipStreakNum">0</b></span>
+				</button>
+				<button class="icon-btn" id="settingsBtn" aria-label="Ajustes" title="Ajustes">
+					<svg class="ic" width="23" height="23" aria-hidden="true"><use href="#i-gear"/></svg>
 				</button>
 				<button class="icon-btn peek-btn" id="peekBtn" aria-label="Mostrar secciones" title="Mostrar secciones">
 					<svg class="ic" width="24" height="24" aria-hidden="true"><use href="#i-panels"/></svg>
@@ -77,102 +84,27 @@
 				<h2><svg class="ic" width="28" height="28" aria-hidden="true"><use href="#i-pencil"/></svg> ¿Qué vas a hacer?</h2>
 
 				<label class="field">
-					<span>Tema u objetivo</span>
-					<input id="topicInput" type="text" placeholder="Ej: estudiar matemáticas" maxlength="80" />
+					<span>Materia o tema</span>
+					<input id="topicInput" type="text" placeholder="Ej: Matemáticas" maxlength="80" />
 				</label>
-
-				<div class="field">
-					<label for="imageQuery">Imagen de fondo</label>
-					<div class="row">
-						<input id="imageQuery" type="text" placeholder="Ej: biblioteca, playa, espacio" />
-						<button class="square-btn" id="searchImageBtn" aria-label="Buscar imagen">
-							<svg class="ic" width="22" height="22" aria-hidden="true"><use href="#i-search"/></svg>
-						</button>
-						<button class="square-btn ghost" id="shuffleImageBtn" aria-label="Ver otra imagen">
-							<svg class="ic" width="22" height="22" aria-hidden="true"><use href="#i-shuffle"/></svg>
-						</button>
-					</div>
-					<small class="hint" id="imageHint">Si lo dejas vacío, se usa tu tema.</small>
-
-					<label class="upload-btn" for="uploadInput">
-						<svg class="ic" width="20" height="20" aria-hidden="true"><use href="#i-upload"/></svg>
-						Subir mis imágenes
-					</label>
-					<input id="uploadInput" class="sr-only" type="file" accept="image/*" multiple />
-					<small class="hint">También puedes arrastrarlas a la página o pegarlas con Ctrl+V.</small>
-
-					<div class="gallery" id="gallery" aria-label="Tus imágenes"></div>
-				</div>
-
-				<div class="times">
-					<label class="field">
-						<span>Enfoque</span>
-						<div class="unit"><input id="workMin" type="number" min="1" max="180" value="25" /><i>min</i></div>
-					</label>
-					<label class="field">
-						<span>Descanso</span>
-						<div class="unit"><input id="shortMin" type="number" min="1" max="60" value="5" /><i>min</i></div>
-					</label>
-					<label class="field">
-						<span>Descanso largo</span>
-						<div class="unit"><input id="longMin" type="number" min="1" max="90" value="15" /><i>min</i></div>
-					</label>
-					<label class="field">
-						<span>Rondas</span>
-						<div class="unit"><input id="rounds" type="number" min="1" max="12" value="4" /></div>
-					</label>
-				</div>
-
-				<div class="presets">
-					<button class="chip" data-preset="25,5,15">25 / 5</button>
-					<button class="chip" data-preset="50,10,20">50 / 10</button>
-					<button class="chip" data-preset="90,15,30">90 / 15</button>
-				</div>
-
-				<label class="field goal-field">
-					<span>Meta diaria</span>
-					<div class="unit"><input id="goal" type="number" min="1" max="24" value="6" /><i>pomodoros</i></div>
-				</label>
-
-				<div class="options">
-					<label class="check">
-						<input type="checkbox" id="autoStart" checked />
-						<span>Empezar el siguiente bloque solo</span>
-					</label>
-					<label class="check">
-						<input type="checkbox" id="warnMinute" checked />
-						<span>Aviso suave cuando falte 1 minuto</span>
-					</label>
-					<label class="check">
-						<input type="checkbox" id="duckBreak" checked />
-						<span>Bajar los sonidos en los descansos</span>
-					</label>
-					<label class="check" id="fullscreenOpt">
-						<input type="checkbox" id="fullscreen" />
-						<span>Pantalla completa al iniciar</span>
-					</label>
-				</div>
 
 				<h3><svg class="ic" width="24" height="24" aria-hidden="true"><use href="#i-list"/></svg> Tareas</h3>
+				<p class="hint">Pasos pequeños y concretos. La marcada es la que harás ahora; toca 🍅 para estimar cuántos pomodoros te tomará.</p>
 				<form class="row" id="taskForm">
-					<input id="taskInput" type="text" placeholder="Añadir una tarea" maxlength="120" />
+					<input id="taskInput" type="text" placeholder="Ej: Ejercicios 1–10 de derivadas" maxlength="120" />
 					<button class="square-btn" type="submit" aria-label="Añadir tarea">
 						<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>
 					</button>
 				</form>
 				<ul class="tasks" id="taskList"></ul>
 
-				<div class="shortcuts" id="shortcuts">
-					<h3><svg class="ic" width="24" height="24" aria-hidden="true"><use href="#i-keyboard"/></svg> Atajos</h3>
-					<dl>
-						<dt><kbd>Espacio</kbd></dt><dd>Iniciar / pausar</dd>
-						<dt><kbd>R</kbd></dt><dd>Reiniciar</dd>
-						<dt><kbd>S</kbd></dt><dd>Saltar bloque</dd>
-						<dt><kbd>M</kbd></dt><dd>Silenciar sonidos</dd>
-						<dt><kbd>F</kbd></dt><dd>Pantalla completa</dd>
-						<dt><kbd>Esc</kbd></dt><dd>Ver secciones sin pausar</dd>
-					</dl>
-				</div>
+				<h3><svg class="ic" width="24" height="24" aria-hidden="true"><use href="#i-bubble"/></svg> Para después</h3>
+				<p class="hint">Si en pleno enfoque se te ocurre algo, anótalo con <b>💭</b><span class="desk-only"> (o la tecla <kbd>N</kbd>)</span> y sigue. Aquí lo encuentras en el descanso.</p>
+				<ul class="notes" id="noteList"></ul>
+
+				<button class="wide-btn ghost-btn" type="button" data-open-settings>
+					<svg class="ic" width="20" height="20" aria-hidden="true"><use href="#i-gear"/></svg> Tiempos, fondo y opciones
+				</button>
 			</aside>
 
 			<!-- ========== TEMPORIZADOR ========== -->
@@ -193,7 +125,7 @@
 					<p class="now-label" id="nowLabel">Ahora estoy haciendo</p>
 					<h1 class="now-topic">
 						<svg class="ic now-icon" id="nowIcon" width="44" height="44" aria-hidden="true"><use href="#i-target"/></svg>
-						<span id="nowTopic">Escribe tu tema a la izquierda</span>
+						<span id="nowTopic">¿Qué es lo primero que vas a hacer?</span>
 					</h1>
 				</div>
 
@@ -222,6 +154,16 @@
 					</button>
 				</div>
 
+				<div class="jot" id="jot">
+					<button class="jot-btn" type="button" id="jotBtn">
+						<svg class="ic" width="18" height="18" aria-hidden="true"><use href="#i-bubble"/></svg> Anotar para después
+					</button>
+					<form class="jot-form" id="jotForm" hidden>
+						<input id="jotInput" type="text" maxlength="140" placeholder="¿Qué se te cruzó? Anótalo y vuelve" aria-label="Anotar para después" />
+						<button type="submit">Guardar</button>
+					</form>
+				</div>
+
 				<div class="reflect" id="reflect" hidden>
 					<p class="reflect-q" id="reflectQ">¿Cómo te fue?</p>
 					<div class="reflect-moods" role="group" aria-label="Cómo te fue">
@@ -230,6 +172,7 @@
 						<button data-mood="3"><span>🔥</span>Muy bien</button>
 					</div>
 					<button class="reflect-task" id="reflectTask" hidden></button>
+					<p class="reflect-meta" id="reflectMeta" hidden></p>
 				</div>
 
 				<figure class="quote" id="quote" title="Clic para otra frase">
@@ -238,45 +181,53 @@
 				</figure>
 			</section>
 
-			<!-- ========== SONIDOS + HISTORIAL ========== -->
-			<aside class="panel" data-panel="sounds" id="panelSounds" aria-label="Sonidos e historial">
-				<h2><svg class="ic" width="28" height="28" aria-hidden="true"><use href="#i-headphones"/></svg> Sonidos</h2>
-				<p class="hint">Mezcla varios y ajusta el volumen de cada uno.</p>
-				<div class="sounds" id="soundGrid"></div>
-				<button class="wide-btn" id="stopSoundsBtn">
-					<svg class="ic" width="22" height="22" aria-hidden="true"><use href="#i-mute"/></svg> Silenciar todo
-				</button>
-
-				<h3 id="progressTitle"><svg class="ic" width="24" height="24" aria-hidden="true"><use href="#i-chart"/></svg> Tu progreso</h3>
-				<div class="progress">
-					<div class="goal">
-						<div class="goal-top">
-							<span id="goalText">0 de 6 pomodoros</span>
-							<span class="streak" id="streak" hidden><svg class="ic" width="18" height="18" aria-hidden="true"><use href="#i-flame"/></svg><b id="streakNum">0</b> <span id="streakLabel">días seguidos</span></span>
+			<!-- ========== PROGRESO + SONIDOS ========== -->
+			<div class="side">
+				<aside class="panel" data-panel="progress" id="panelProgress" aria-label="Tu progreso">
+					<h2 id="progressTitle"><svg class="ic" width="24" height="24" aria-hidden="true"><use href="#i-chart"/></svg> Tu progreso</h2>
+					<div class="progress">
+						<div class="goal">
+							<div class="goal-top">
+								<span id="goalText">0 de 6 pomodoros</span>
+								<span class="streak" id="streak" hidden><svg class="ic" width="18" height="18" aria-hidden="true"><use href="#i-flame"/></svg><b id="streakNum">0</b> <span id="streakLabel">días seguidos</span></span>
+							</div>
+							<div class="goal-bar" role="progressbar" aria-label="Meta diaria" aria-valuemin="0" id="goalBar"><i id="goalFill"></i></div>
 						</div>
-						<div class="goal-bar" role="progressbar" aria-label="Meta diaria" aria-valuemin="0" id="goalBar"><i id="goalFill"></i></div>
-					</div>
-					<div class="week" id="week" aria-label="Pomodoros de los últimos 7 días"></div>
-					<p class="week-total" id="weekTotal"></p>
-					<ul class="by-topic" id="byTopic"></ul>
-					<div class="account" id="account">
-						<span class="avatar" id="accountAvatar" aria-hidden="true">?</span>
-						<div class="account-info">
-							<b id="accountName">Tu cuenta</b>
-							<span class="sync" id="syncStatus">
-								<svg class="ic" width="15" height="15" aria-hidden="true"><use href="#i-cloud"/></svg>
-								<span id="syncText">Guardado en tu cuenta</span>
-							</span>
-						</div>
+						<div class="week" id="week" aria-label="Pomodoros de los últimos 7 días"></div>
+						<p class="week-total" id="weekTotal"></p>
+						<ul class="by-topic" id="byTopic"></ul>
+						<div class="account" id="account">
+							<span class="avatar" id="accountAvatar" aria-hidden="true">?</span>
+							<div class="account-info">
+								<b id="accountName">Tu cuenta</b>
+								<span class="sync" id="syncStatus">
+									<svg class="ic" width="15" height="15" aria-hidden="true"><use href="#i-cloud"/></svg>
+									<span id="syncText">Guardado en tu cuenta</span>
+								</span>
+							</div>
+							<button class="mini-btn cta" id="accountCta" hidden>Crear cuenta</button>
 						<button class="mini-btn" id="logoutBtn" title="Cerrar sesión" aria-label="Cerrar sesión">
-							<svg class="ic" width="18" height="18" aria-hidden="true"><use href="#i-logout"/></svg>
+								<svg class="ic" width="18" height="18" aria-hidden="true"><use href="#i-logout"/></svg>
+							</button>
+						</div>
+					</div>
+
+					<h3><svg class="ic" width="24" height="24" aria-hidden="true"><use href="#i-calendar"/></svg> Hoy hiciste</h3>
+					<ul class="log" id="logList"></ul>
+				</aside>
+
+				<aside class="panel" data-panel="sounds" id="panelSounds" aria-label="Sonidos">
+					<h2><svg class="ic" width="28" height="28" aria-hidden="true"><use href="#i-headphones"/></svg> Sonidos</h2>
+					<p class="hint">El ruido de fondo constante ayuda a no distraerte. Mezcla y ajusta el volumen.</p>
+					<div class="sounds" id="soundGrid"></div>
+					<div class="sound-actions">
+						<button class="wide-btn" id="moreSoundsBtn" aria-expanded="false">Más sonidos</button>
+						<button class="wide-btn" id="stopSoundsBtn">
+							<svg class="ic" width="22" height="22" aria-hidden="true"><use href="#i-mute"/></svg> Silenciar
 						</button>
 					</div>
-				</div>
-
-				<h3><svg class="ic" width="24" height="24" aria-hidden="true"><use href="#i-calendar"/></svg> Hoy hiciste</h3>
-				<ul class="log" id="logList"></ul>
-			</aside>
+				</aside>
+			</div>
 		</main>
 
 		<!-- Navegación inferior (solo en celular) -->
@@ -289,6 +240,10 @@
 				<span class="tab-time" id="tabTime">25:00</span>
 				<span>Temporizador</span>
 			</button>
+			<button data-view="progress" aria-controls="panelProgress">
+				<svg class="ic" width="22" height="22" aria-hidden="true"><use href="#i-chart"/></svg>
+				<span>Progreso</span>
+			</button>
 			<button data-view="sounds" aria-controls="panelSounds">
 				<svg class="ic" width="22" height="22" aria-hidden="true"><use href="#i-headphones"/></svg>
 				<span>Sonidos</span>
@@ -296,11 +251,114 @@
 			</button>
 		</nav>
 
-		<!-- Registro obligatorio -->
-		<div class="auth" id="auth" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+		<!-- Ajustes: se configuran una vez y se olvidan -->
+		<dialog class="sheet" id="settingsDlg" aria-labelledby="settingsTitle">
+			<div class="sheet-head">
+				<h2 id="settingsTitle"><svg class="ic" width="26" height="26" aria-hidden="true"><use href="#i-gear"/></svg> Ajustes</h2>
+				<button class="icon-btn" type="button" id="settingsClose" aria-label="Cerrar ajustes">
+					<svg class="ic" width="20" height="20" aria-hidden="true"><use href="#i-x"/></svg>
+				</button>
+			</div>
+			<div class="sheet-body">
+				<section>
+					<h3><svg class="ic" width="22" height="22" aria-hidden="true"><use href="#i-clock"/></svg> Tiempos</h3>
+					<div class="presets">
+						<button class="chip" data-preset="25,5,15">25 / 5</button>
+						<button class="chip" data-preset="50,10,20">50 / 10</button>
+						<button class="chip" data-preset="90,15,30">90 / 15</button>
+					</div>
+					<div class="times">
+						<label class="field">
+							<span>Enfoque</span>
+							<div class="unit"><input id="workMin" type="number" min="1" max="180" value="25" /><i>min</i></div>
+						</label>
+						<label class="field">
+							<span>Descanso</span>
+							<div class="unit"><input id="shortMin" type="number" min="1" max="60" value="5" /><i>min</i></div>
+						</label>
+						<label class="field">
+							<span>Descanso largo</span>
+							<div class="unit"><input id="longMin" type="number" min="1" max="90" value="15" /><i>min</i></div>
+						</label>
+						<label class="field">
+							<span>Rondas</span>
+							<div class="unit"><input id="rounds" type="number" min="1" max="12" value="4" /></div>
+						</label>
+					</div>
+					<label class="field goal-field">
+						<span>Meta diaria</span>
+						<div class="unit"><input id="goal" type="number" min="1" max="24" value="6" /><i>pomodoros</i></div>
+					</label>
+				</section>
+				<section>
+					<h3><svg class="ic" width="22" height="22" aria-hidden="true"><use href="#i-image"/></svg> Fondo</h3>
+					<div class="field">
+						<label for="imageQuery">Buscar una foto</label>
+						<div class="row">
+							<input id="imageQuery" type="text" placeholder="Ej: biblioteca, playa, espacio" />
+							<button class="square-btn" id="searchImageBtn" aria-label="Buscar imagen">
+								<svg class="ic" width="22" height="22" aria-hidden="true"><use href="#i-search"/></svg>
+							</button>
+							<button class="square-btn ghost" id="shuffleImageBtn" aria-label="Ver otra imagen">
+								<svg class="ic" width="22" height="22" aria-hidden="true"><use href="#i-shuffle"/></svg>
+							</button>
+						</div>
+						<small class="hint" id="imageHint">Si lo dejas vacío, se usa tu tema.</small>
+
+						<label class="upload-btn" for="uploadInput">
+							<svg class="ic" width="20" height="20" aria-hidden="true"><use href="#i-upload"/></svg>
+							Subir mis imágenes
+						</label>
+						<input id="uploadInput" class="sr-only" type="file" accept="image/*" multiple />
+						<small class="hint">También puedes arrastrarlas a la página o pegarlas con Ctrl+V.</small>
+
+						<div class="gallery" id="gallery" aria-label="Tus imágenes"></div>
+					</div>
+				</section>
+				<section>
+					<h3><svg class="ic" width="22" height="22" aria-hidden="true"><use href="#i-check"/></svg> Opciones</h3>
+					<div class="options">
+						<label class="check">
+							<input type="checkbox" id="autoStart" checked />
+							<span>Empezar el siguiente bloque solo</span>
+						</label>
+						<label class="check">
+							<input type="checkbox" id="warnMinute" checked />
+							<span>Aviso suave cuando falte 1 minuto</span>
+						</label>
+						<label class="check">
+							<input type="checkbox" id="duckBreak" checked />
+							<span>Bajar los sonidos en los descansos</span>
+						</label>
+						<label class="check" id="fullscreenOpt">
+							<input type="checkbox" id="fullscreen" />
+							<span>Pantalla completa al iniciar</span>
+						</label>
+					</div>
+				</section>
+					<section class="shortcuts" id="shortcuts">
+						<h3><svg class="ic" width="24" height="24" aria-hidden="true"><use href="#i-keyboard"/></svg> Atajos</h3>
+						<dl>
+							<dt><kbd>Espacio</kbd></dt><dd>Iniciar / pausar</dd>
+							<dt><kbd>R</kbd></dt><dd>Reiniciar</dd>
+							<dt><kbd>S</kbd></dt><dd>Saltar bloque</dd>
+							<dt><kbd>M</kbd></dt><dd>Silenciar sonidos</dd>
+							<dt><kbd>F</kbd></dt><dd>Pantalla completa</dd>
+							<dt><kbd>N</kbd></dt><dd>Anotar algo para después</dd>
+						<dt><kbd>Esc</kbd></dt><dd>Ver secciones sin pausar</dd>
+						</dl>
+					</section>
+			</div>
+		</dialog>
+
+		<!-- Registro: después del primer pomodoro -->
+		<div class="auth" id="auth" role="dialog" aria-modal="true" aria-labelledby="authTitle" hidden>
 			<div class="auth-card">
+				<button class="icon-btn auth-close" type="button" id="authClose" aria-label="Cerrar" hidden>
+					<svg class="ic" width="18" height="18" aria-hidden="true"><use href="#i-x"/></svg>
+				</button>
 				<div class="auth-brand">
-					<svg class="ic" width="40" height="40" aria-hidden="true"><use href="#i-brand"/></svg>
+					<img class="logo" src="img/tomato.png" width="40" height="40" alt="" />
 					<span>Focus Timer</span>
 				</div>
 				<div class="auth-loading" id="authLoading">
@@ -309,8 +367,15 @@
 				</div>
 
 				<div class="auth-body" id="authBody" hidden>
+					<p class="auth-badge" id="authBadge" hidden>🎉 ¡Primer pomodoro listo!</p>
 					<h1 id="authTitle">Crea tu cuenta</h1>
 					<p class="auth-sub" id="authSub">Tu progreso, tu racha y tus tareas quedan guardados y te siguen en cualquier dispositivo.</p>
+
+					<button class="auth-google" type="button" id="googleBtn">
+						<svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
+						Continuar con Google
+					</button>
+					<div class="auth-or"><span>o con tu correo</span></div>
 
 					<div class="auth-tabs" role="tablist">
 						<button type="button" role="tab" data-auth="register" aria-selected="true">Crear cuenta</button>
@@ -335,11 +400,6 @@
 						<button class="auth-link" type="button" id="forgotBtn" hidden>¿Olvidaste tu contraseña?</button>
 					</form>
 
-					<div class="auth-or"><span>o</span></div>
-					<button class="auth-google" type="button" id="googleBtn">
-						<svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
-						Continuar con Google
-					</button>
 				</div>
 
 				<div class="auth-body" id="authOffline" hidden>

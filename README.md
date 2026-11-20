@@ -14,7 +14,10 @@ Temporizador pomodoro con fondo según tu tema, sonidos ambientales y frases mot
 - **Tu progreso**: meta diaria, racha de días seguidos, gráfico de la semana y tiempo por tema (se guarda hasta un año).
 - **¿Cómo te fue?**: al terminar cada pomodoro marcas cómo te fue y si terminaste la tarea actual.
 - **Aviso suave** cuando falta 1 minuto y **sonidos más bajos** en los descansos (opcionales).
-- **Cuenta obligatoria** (Firebase): registro con correo o Google; el progreso, las tareas y los ajustes se sincronizan entre dispositivos.
+- **Empiezas en segundos**: escribe tu tema y el primer paso, y dale a iniciar. Los tiempos, el fondo y las opciones están aparte, en ⚙️ Ajustes.
+- **La tarea manda**: el título grande es tu paso concreto (no la materia), con pomodoros estimados por tarea (🍅 1/3).
+- **Para después**: si en pleno enfoque se te cruza algo, lo anotas con 💭 (o la tecla N) y sigues; lo ves en el descanso.
+- **Cuenta** (Firebase): después del primer pomodoro se pide crear cuenta (correo o Google) para guardar la racha; el progreso, las tareas y las notas se sincronizan entre dispositivos.
 - **App instalable** (PWA): se puede añadir a la pantalla de inicio y funciona sin internet.
 - Pantalla completa opcional.
 
@@ -27,6 +30,7 @@ Temporizador pomodoro con fondo según tu tema, sonidos ambientales y frases mot
 | S | Saltar bloque |
 | M | Silenciar sonidos |
 | F | Pantalla completa |
+| N | Anotar algo para después |
 | Esc | Ver las secciones sin pausar |
 
 ## Cómo ejecutarlo
@@ -50,4 +54,5 @@ En la [consola de Firebase](https://console.firebase.google.com/) del proyecto `
 ## Créditos
 
 - Basado en [focus-timer](https://github.com/LucasSPaiva/focus-timer) de LucasSPaiva.
+- Ícono del tomate: [Noto Emoji](https://github.com/googlefonts/noto-emoji) de Google (licencia Apache 2.0).
 - Fotos de los sonidos: Wikimedia Commons, ver [`img/sounds/CREDITOS.md`](img/sounds/CREDITOS.md).

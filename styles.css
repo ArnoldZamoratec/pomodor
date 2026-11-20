@@ -205,9 +205,9 @@ input { font: inherit; color: var(--text); }
 .panel h3 { font-size: 1.08rem; font-weight: 700; margin-top: 10px; }
 
 .hint {
-	color: var(--faint);
-	font-size: 0.84rem;
-	line-height: 1.4;
+	color: var(--muted);
+	font-size: 0.88rem;
+	line-height: 1.45;
 }
 
 /* ---------- Campos ---------- */
@@ -901,7 +901,8 @@ body.running .peek-btn[aria-pressed='true'] { color: var(--accent); }
 	to { opacity: 1; transform: none; }
 }
 
-body.focusing .layout > .panel { display: none; }
+body.focusing .layout > .panel,
+body.focusing .layout > .side { display: none; }
 body.focusing .layout { grid-template-columns: 1fr; }
 body.focusing .center {
 	grid-column: 1 / -1;
@@ -1514,3 +1515,251 @@ body.locked .tabbar { filter: blur(10px); pointer-events: none; user-select: non
 	animation: spin 0.8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+
+/* =====================================================================
+   Rediseño de la experiencia: empezar rápido, la tarea al frente,
+   ajustes aparte y descarga mental en pleno enfoque
+   ===================================================================== */
+
+/* Columna derecha: progreso arriba, sonidos debajo */
+.side {
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+	max-height: calc(100vh - 112px);
+	overflow-y: auto;
+	scrollbar-width: thin;
+	border-radius: var(--r-panel);
+}
+.side > .panel { max-height: none; overflow: visible; flex-shrink: 0; }
+
+/* Contador de arriba con racha */
+.chip-streak {
+	display: inline-flex;
+	align-items: center;
+	gap: 2px;
+	margin-left: 4px;
+	padding-left: 8px;
+	border-left: 1px solid var(--panel-border);
+}
+.chip-streak .ic { color: #ff9a3c; }
+
+/* Título: la tarea concreta. Si falta, invita a escribirla */
+.now-topic.prompt { cursor: pointer; }
+.now-topic.prompt span {
+	opacity: 0.85;
+	text-decoration: underline dashed color-mix(in srgb, var(--accent) 70%, transparent);
+	text-decoration-thickness: 2px;
+	text-underline-offset: 8px;
+}
+.now-label { text-wrap: balance; }
+
+/* Pomodoros estimados por tarea */
+.tasks li .est {
+	width: auto !important;
+	min-width: 48px;
+	padding: 0 8px;
+	font-size: 0.8rem;
+	font-weight: 700;
+	opacity: 0.85 !important;
+	border-radius: 999px !important;
+	background: var(--input);
+	white-space: nowrap;
+	font-variant-numeric: tabular-nums;
+}
+.tasks li .est:hover { opacity: 1 !important; }
+.tasks li .est.over { color: #f5b942; }
+.tasks li.done .est { opacity: 0.4 !important; }
+
+/* Para después */
+.notes { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.notes li {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 9px 10px 9px 12px;
+	border-radius: var(--r-control);
+	background: var(--input);
+	border: 1px dashed var(--input-border);
+	font-size: 0.93rem;
+}
+.notes li span { flex: 1; word-break: break-word; }
+.notes li button {
+	width: 28px;
+	height: 28px;
+	border-radius: 8px;
+	display: grid;
+	place-items: center;
+	opacity: 0.6;
+}
+.notes li button:hover { opacity: 1; background: var(--input); }
+.hint kbd {
+	padding: 1px 6px;
+	border-radius: 6px;
+	background: var(--input);
+	border: 1px solid var(--input-border);
+	font: 600 0.78rem var(--sans);
+}
+
+.ghost-btn { background: transparent; color: var(--muted); margin-top: 4px; }
+.ghost-btn .ic { color: var(--accent); }
+
+/* Sonidos: 4 a la vista; el resto en "Más" (los activos siempre se ven) */
+.sound.extra { display: none; }
+.sounds.show-all .sound.extra,
+.sound.extra.active { display: flex; }
+.sound-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.sound-actions .wide-btn { padding: 10px 8px; font-size: 0.9rem; }
+
+/* Anotar para después (solo mientras trabajas) */
+.jot { display: none; width: min(420px, 100%); justify-content: center; transition: opacity 0.8s ease; }
+body.running[data-mode='work'] .jot { display: flex; }
+.jot-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	padding: 8px 16px;
+	border-radius: 999px;
+	color: var(--muted);
+	background: var(--panel);
+	border: 1px solid var(--panel-border);
+	backdrop-filter: blur(14px);
+	-webkit-backdrop-filter: blur(14px);
+	font-size: 0.9rem;
+	font-weight: 600;
+	transition: color 0.2s, border-color 0.2s;
+}
+.jot-btn:hover { color: var(--text); border-color: var(--accent); }
+.jot-form {
+	display: flex;
+	gap: 6px;
+	width: 100%;
+	padding: 5px;
+	border-radius: 999px;
+	background: var(--panel);
+	border: 1px solid var(--accent);
+	backdrop-filter: blur(18px);
+	-webkit-backdrop-filter: blur(18px);
+	animation: panel-in 0.25s ease both;
+}
+.jot-form input {
+	flex: 1;
+	min-width: 0;
+	padding: 8px 12px;
+	background: none;
+	border: none;
+	outline: none;
+	font-size: 0.95rem;
+}
+.jot-form button {
+	padding: 8px 16px;
+	border-radius: 999px;
+	background: var(--accent);
+	color: #fff;
+	font-weight: 700;
+	font-size: 0.88rem;
+}
+body.focusing.idle:not(.jotting) .jot { opacity: 0; pointer-events: none; }
+body.jotting { cursor: auto !important; }
+
+.reflect-meta { font-size: 0.85rem; color: var(--muted); text-align: center; }
+
+/* ---------- Ajustes (hoja lateral; inferior en celular) ---------- */
+.sheet {
+	margin: 0 0 0 auto;
+	height: 100dvh;
+	max-height: 100dvh;
+	width: min(420px, 100vw);
+	border: none;
+	border-left: 1px solid var(--panel-border);
+	background: color-mix(in srgb, #1e1714 94%, transparent);
+	backdrop-filter: blur(24px);
+	-webkit-backdrop-filter: blur(24px);
+	color: var(--text);
+	padding: 0;
+	box-shadow: var(--shadow);
+	overflow: hidden;
+}
+.sheet[open] { display: flex; flex-direction: column; animation: sheet-in 0.3s cubic-bezier(.2, .8, .2, 1); }
+@keyframes sheet-in { from { transform: translateX(40px); opacity: 0; } }
+.sheet::backdrop { background: rgba(10, 6, 4, 0.5); backdrop-filter: blur(3px); }
+.sheet-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: calc(16px + env(safe-area-inset-top)) 20px 12px;
+	border-bottom: 1px solid var(--panel-border);
+}
+.sheet-head h2 { display: flex; align-items: center; gap: 10px; font-size: 1.3rem; }
+.sheet-head h2 .ic { color: var(--accent); }
+.sheet-head .icon-btn { width: 40px; height: 40px; }
+.sheet-body {
+	flex: 1;
+	overflow-y: auto;
+	padding: 18px 20px calc(28px + env(safe-area-inset-bottom));
+	display: flex;
+	flex-direction: column;
+	gap: 26px;
+}
+.sheet-body section { display: flex; flex-direction: column; gap: 12px; }
+.sheet-body h3 { display: flex; align-items: center; gap: 9px; font-size: 1.05rem; }
+.sheet-body h3 .ic { color: var(--accent); }
+.sheet-body .shortcuts dl { margin-top: 0; }
+
+/* ---------- Cuenta: invitado ---------- */
+.account.guest .avatar { background: var(--track); }
+.mini-btn.cta { background: var(--accent); border-color: var(--accent); color: #fff; white-space: nowrap; }
+
+/* ---------- Registro ---------- */
+.auth-card { position: relative; }
+.auth-close { position: absolute; top: 12px; right: 12px; width: 36px !important; height: 36px !important; }
+.auth-badge {
+	width: max-content;
+	margin: 0 auto 10px;
+	padding: 6px 14px;
+	border-radius: 999px;
+	background: color-mix(in srgb, #f5b942 20%, transparent);
+	font-weight: 700;
+	font-size: 0.9rem;
+}
+.auth-or { margin: 14px 0; }
+
+/* ---------- Pantallas medianas ---------- */
+@media (max-width: 1150px) {
+	.side { max-height: none; overflow: visible; }
+}
+
+/* ---------- Celular: 4 pestañas y hoja inferior ---------- */
+@media (max-width: 720px) {
+	.layout > .side { display: none; }
+	body[data-view='progress'] .layout > .side,
+	body[data-view='sounds'] .layout > .side { display: flex; }
+	.side > .panel { display: none; }
+	body[data-view='progress'] [data-panel='progress'],
+	body[data-view='sounds'] [data-panel='sounds'] { display: flex; }
+
+	.tabbar { grid-template-columns: repeat(4, 1fr) !important; }
+	.tabbar button span:not(.tab-time) { font-size: 0.72rem; }
+
+	.sheet {
+		margin: auto 0 0;
+		width: 100vw;
+		max-width: 100vw;
+		height: 88dvh;
+		max-height: 88dvh;
+		border-left: none;
+		border-top: 1px solid var(--panel-border);
+		border-radius: 24px 24px 0 0;
+	}
+	.sheet[open] { animation-name: sheet-up; }
+	@keyframes sheet-up { from { transform: translateY(60px); opacity: 0; } }
+
+	.topbar #settingsBtn { width: 42px; height: 42px; }
+	.chip-streak { padding-left: 6px; }
+}
+
+@media (hover: none) { .desk-only { display: none; } }
+
+/* Logo: el tomate */
+.logo { display: block; flex-shrink: 0; filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.35)); }

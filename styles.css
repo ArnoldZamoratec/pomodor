@@ -890,6 +890,67 @@ input { font: inherit; color: var(--text); }
 .toast.show { transform: translate(-50%, 0); }
 .toast .ic { color: var(--accent); }
 
+/* ---------- Modo enfoque (mientras corre el temporizador) ---------- */
+.peek-btn { display: none; }
+body.running .peek-btn { display: grid; }
+body.running .peek-btn[aria-pressed='true'] { color: var(--accent); }
+
+.panel { animation: panel-in 0.35s ease both; }
+@keyframes panel-in {
+	from { opacity: 0; transform: translateY(10px); }
+	to { opacity: 1; transform: none; }
+}
+
+body.focusing .layout > .panel { display: none; }
+body.focusing .layout { grid-template-columns: 1fr; }
+body.focusing .center {
+	grid-column: 1 / -1;
+	justify-content: center;
+	gap: 28px;
+	min-height: calc(100vh - 140px);
+	animation: focus-in 0.6s ease both;
+}
+@keyframes focus-in {
+	from { opacity: 0.4; transform: scale(0.97); }
+	to { opacity: 1; transform: none; }
+}
+
+/* Menos estímulos: fuera marca, contador, pestañas de modo */
+body.focusing .brand,
+body.focusing .today-count,
+body.focusing .modes { visibility: hidden; opacity: 0; }
+
+/* Mientras trabajas no hay frase: solo tu intención. En descansos sí. */
+body.focusing[data-mode='work'] .quote { display: none; }
+
+/* Fondo más oscuro y desenfocado: el ojo va al reloj */
+.bg, .bg-overlay { transition: filter 1.2s ease, opacity 1.2s ease; }
+body.focusing .bg { filter: blur(6px) saturate(0.8) brightness(0.75); transform: scale(1.04); }
+.theme-light body.focusing .bg,
+html.theme-light body.focusing .bg { filter: blur(6px) saturate(0.8) brightness(1.05); }
+
+/* La intención, protagonista */
+body.focusing[data-mode='work'] .now-label { opacity: 0.75; }
+body.focusing[data-mode='work'] .now-topic { font-size: clamp(2rem, 4vw, 3.2rem); }
+
+/* Segundos atenuados: menos ansiedad de mirar el reloj */
+.time .sec { opacity: 0.85; transition: opacity 0.6s; }
+body.focusing .time .sec { opacity: 0.35; font-size: 0.55em; vertical-align: 0.6em; }
+
+/* Anillo que respira lento (≈6 s, ritmo de respiración calmada) */
+body.focusing .ring { animation: breathe 6s ease-in-out infinite; }
+@keyframes breathe {
+	0%, 100% { filter: drop-shadow(0 0 14px color-mix(in srgb, var(--accent) 30%, transparent)); }
+	50% { filter: drop-shadow(0 0 34px color-mix(in srgb, var(--accent) 60%, transparent)); }
+}
+
+/* Controles que se desvanecen si no te mueves */
+.controls, .topbar-actions, .round-info { transition: opacity 0.8s ease; }
+body.focusing.idle .controls,
+body.focusing.idle .topbar-actions { opacity: 0; pointer-events: none; }
+body.focusing.idle .round-info { opacity: 0.45; }
+body.focusing.idle { cursor: none; }
+
 /* ---------- Movimiento reducido ---------- */
 @media (prefers-reduced-motion: reduce) {
 	*, *::before, *::after {
@@ -1095,4 +1156,13 @@ input { font: inherit; color: var(--text); }
 	.controls { grid-area: controls; }
 	.quote { grid-area: quote; min-height: 0; padding: 0; }
 	.quote blockquote { font-size: 1.2rem; }
+}
+
+/* Modo enfoque en celular: sin barra inferior */
+@media (max-width: 720px) {
+	body.focusing { padding-bottom: env(safe-area-inset-bottom); }
+	body.focusing .tabbar { display: none; }
+	body.focusing .center {
+		min-height: calc(100dvh - env(safe-area-inset-bottom) - env(safe-area-inset-top) - 86px);
+	}
 }

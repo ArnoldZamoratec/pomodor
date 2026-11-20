@@ -101,6 +101,8 @@ el.ring.style.strokeDasharray = CIRC
 const tabTime = $('#tabTime')
 const soundBadge = $('#soundBadge')
 const tabButtons = document.querySelectorAll('.tabbar button')
+const peekBtn = $('#peekBtn')
+let peek = false
 
 function setView(view) {
 	document.body.dataset.view = view
@@ -164,12 +166,14 @@ const totalSeconds = () => MODE_INFO[mode].minutes() * 60
 
 // ---------- Render ----------
 function renderTimer() {
-	el.time.textContent = fmt(remaining)
+	const [mm, ss] = fmt(remaining).split(':')
+	el.time.innerHTML = `${mm}<span class="sec">:${ss}</span>`
 	tabTime.textContent = fmt(remaining)
 	const progress = 1 - remaining / totalSeconds()
 	el.ring.style.strokeDashoffset = CIRC * progress
 	el.play.classList.toggle('running', isRunning())
 	el.play.setAttribute('aria-label', isRunning() ? 'Pausar' : 'Empezar')
+	renderFocus()
 
 	const topic = settings.topic.trim()
 	document.title = `${fmt(remaining)} · ${MODE_INFO[mode].label}${topic && mode === 'work' ? ' — ' + topic : ''}`
@@ -292,6 +296,62 @@ function renderLog() {
 		})
 }
 
+// ---------- Modo enfoque: solo el pomodoro mientras corre ----------
+// Psicología aplicada:
+// - Menos estímulos: se ocultan paneles, barra, pestañas y frase mientras trabajas.
+// - La intención (tema / tarea actual) queda siempre a la vista.
+// - Los controles se desvanecen si no mueves nada: nada que te tiente a tocar.
+// - Los segundos van atenuados para no mirar el reloj con ansiedad.
+// - El anillo "respira" a ritmo lento (≈6 s) para calmar.
+// - La pantalla no se apaga (Wake Lock) mientras corre.
+let idleTimer
+let wakeLock = null
+
+function wake() {
+	document.body.classList.remove('idle')
+	clearTimeout(idleTimer)
+	if (document.body.classList.contains('focusing')) {
+		idleTimer = setTimeout(() => document.body.classList.add('idle'), 3000)
+	}
+}
+;['pointermove', 'pointerdown', 'keydown', 'touchstart', 'focusin'].forEach(ev =>
+	document.addEventListener(ev, wake, { passive: true })
+)
+
+async function syncWakeLock() {
+	if (!('wakeLock' in navigator)) return
+	try {
+		if (isRunning() && !wakeLock && document.visibilityState === 'visible') {
+			wakeLock = await navigator.wakeLock.request('screen')
+			wakeLock.addEventListener('release', () => (wakeLock = null))
+		} else if (!isRunning() && wakeLock) {
+			await wakeLock.release()
+			wakeLock = null
+		}
+	} catch {}
+}
+document.addEventListener('visibilitychange', syncWakeLock)
+
+let wasFocusing = false
+function renderFocus() {
+	const focusing = isRunning() && !peek
+	document.body.classList.toggle('focusing', focusing)
+	document.body.classList.toggle('running', isRunning())
+	if (focusing !== wasFocusing) {
+		wasFocusing = focusing
+		wake()
+		syncWakeLock()
+	}
+	peekBtn.setAttribute('aria-pressed', String(peek))
+	peekBtn.setAttribute('aria-label', peek ? 'Ocultar secciones' : 'Mostrar secciones')
+	peekBtn.title = peekBtn.getAttribute('aria-label')
+}
+
+peekBtn.addEventListener('click', () => {
+	peek = !peek
+	renderFocus()
+})
+
 // ---------- Temporizador ----------
 function tick() {
 	remaining = Math.max(0, Math.round((endAt - Date.now()) / 1000))
@@ -303,6 +363,8 @@ function start() {
 	if (isRunning()) return
 	if (remaining <= 0) remaining = totalSeconds()
 	endAt = Date.now() + remaining * 1000
+	peek = false
+	setView('timer')
 	ticker = setInterval(tick, 250)
 	if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission()
 	if (mode === 'work' && !settings.topic.trim()) toast('Escribe en qué vas a trabajar para tenerlo presente', 'pencil')
@@ -314,6 +376,7 @@ function pause() {
 	clearInterval(ticker)
 	remaining = Math.max(0, Math.round((endAt - Date.now()) / 1000))
 	endAt = null
+	peek = false
 	renderTimer()
 }
 
@@ -828,6 +891,11 @@ el.themeBtn.addEventListener('click', () => {
 })
 
 document.addEventListener('keydown', e => {
+	if (e.key === 'Escape' && isRunning()) {
+		peek = !peek
+		renderFocus()
+		return
+	}
 	if (e.code !== 'Space') return
 	const tag = document.activeElement?.tagName
 	if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'BUTTON') return

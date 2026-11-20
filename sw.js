@@ -3,7 +3,7 @@
 // - Imágenes, sonidos y fuentes: primero la copia guardada (no cambian).
 // Al cambiar archivos del "esqueleto", sube VERSION para renovar la caché.
 
-const VERSION = 'v2'
+const VERSION = 'v4'
 const CACHE = `focus-timer-${VERSION}`
 
 const SOUNDS = ['rain', 'forest', 'fire', 'coffee', 'waves', 'wind', 'fan', 'clock', 'white', 'pink', 'brown']
@@ -17,6 +17,7 @@ const SHELL = [
 	'js/sounds.js',
 	'js/quotes.js',
 	'js/imagestore.js',
+	'js/cloud.js',
 	'favicons/favicon-16x16.png',
 	'favicons/favicon-32x32.png',
 	'favicons/apple-touch-icon.png',
@@ -48,8 +49,8 @@ self.addEventListener('fetch', e => {
 	if (req.method !== 'GET') return
 	const url = new URL(req.url)
 
-	// Fuentes de Google: se guardan la primera vez
-	if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
+	// Fuentes de Google y SDK de Firebase: se guardan la primera vez
+	if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com' || url.pathname.startsWith('/firebasejs/')) {
 		e.respondWith(cacheFirst(req))
 		return
 	}

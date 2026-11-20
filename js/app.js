@@ -1,6 +1,7 @@
 import { SOUND_LIST, SoundEngine } from './sounds.js'
 import { QUOTES } from './quotes.js'
 import { addImage, getImage, listImages, deleteImage } from './imagestore.js'
+import * as cloud from './cloud.js'
 
 const $ = sel => document.querySelector(sel)
 const sounds = SoundEngine()
@@ -27,8 +28,47 @@ const store = {
 		try {
 			localStorage.setItem('ft:' + key, JSON.stringify(value))
 		} catch {}
+		if (cloud.SYNC_KEYS.includes(key)) queueSync()
 	}
 }
+
+// ---------- Sincronización con la cuenta ----------
+let currentUser = null
+let syncTimer = null
+
+function queueSync() {
+	if (!currentUser) return
+	clearTimeout(syncTimer)
+	setSync('saving')
+	syncTimer = setTimeout(syncNow, 1500)
+}
+
+async function syncNow() {
+	if (!currentUser) return
+	const data = {}
+	cloud.SYNC_KEYS.forEach(k => (data[k] = store.get(k, null)))
+	if (data.settings) data.settings = { ...data.settings, bgUpload: null } // la imagen subida vive solo en este dispositivo
+	try {
+		await cloud.push(currentUser.uid, data)
+		setSync('ok')
+	} catch (e) {
+		setSync(navigator.onLine ? 'error' : 'offline', e)
+	}
+}
+
+function setSync(state, e) {
+	const box = document.getElementById('syncStatus')
+	const text = document.getElementById('syncText')
+	if (!box) return
+	box.dataset.state = state
+	text.textContent = {
+		ok: 'Guardado en tu cuenta',
+		saving: 'Guardando…',
+		offline: 'Sin conexión: se guardará al volver',
+		error: e ? cloud.errorMessage(e) : 'No se pudo guardar'
+	}[state]
+}
+window.addEventListener('online', () => currentUser && syncNow())
 
 const dayKey = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 const todayKey = () => dayKey(new Date())
@@ -126,8 +166,6 @@ const el = {
 	toast: $('#toast'),
 	toastIcon: $('#toastIcon'),
 	toastText: $('#toastText'),
-	themeBtn: $('#themeBtn'),
-	themeIcon: $('#themeIcon'),
 	nowIcon: $('#nowIcon'),
 	todayNumber: $('#todayNumber'),
 	quote: $('#quote'),
@@ -481,55 +519,6 @@ $('#todayCount').addEventListener('click', () => {
 	renderFocus()
 	setView('sounds')
 	requestAnimationFrame(() => $('#progressTitle').scrollIntoView({ behavior: 'smooth', block: 'start' }))
-})
-
-// ---------- Copia de seguridad (exportar / importar) ----------
-$('#exportBtn').addEventListener('click', () => {
-	const data = {
-		app: 'focus-timer',
-		version: 1,
-		exported: new Date().toISOString(),
-		history,
-		tasks,
-		settings: { ...settings, bgUpload: null },
-		volumes: soundVolumes
-	}
-	const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-	const a = document.createElement('a')
-	a.href = URL.createObjectURL(blob)
-	a.download = `focus-timer-${todayKey()}.json`
-	a.click()
-	setTimeout(() => URL.revokeObjectURL(a.href), 1000)
-	toast('Copia guardada en tus descargas', 'download')
-})
-
-$('#importInput').addEventListener('change', async e => {
-	const file = e.target.files[0]
-	e.target.value = ''
-	if (!file) return
-	try {
-		const data = JSON.parse(await file.text())
-		if (data.app !== 'focus-timer' || typeof data.history !== 'object') throw new Error()
-		// Une el historial: por cada día se queda con el registro más completo
-		let days = 0
-		for (const [day, items] of Object.entries(data.history)) {
-			if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || !Array.isArray(items)) continue
-			if (!history[day] || items.length > history[day].length) {
-				history[day] = items
-				days++
-			}
-		}
-		store.set('history', history)
-		if (Array.isArray(data.tasks) && data.tasks.length) store.set('tasks', data.tasks)
-		if (data.settings && typeof data.settings === 'object') {
-			store.set('settings', { ...settings, ...data.settings, bgUpload: settings.bgUpload })
-		}
-		if (data.volumes && typeof data.volumes === 'object') store.set('volumes', data.volumes)
-		toast(`Copia restaurada (${days} ${days === 1 ? 'día' : 'días'} de historial). Recargando…`, 'check')
-		setTimeout(() => location.reload(), 1600)
-	} catch {
-		toast('Ese archivo no es una copia de Focus Timer', 'x')
-	}
 })
 
 // ---------- Pantalla completa ----------
@@ -936,10 +925,8 @@ function renderSounds() {
 
 // ---------- Tema claro/oscuro ----------
 function applyTheme() {
-	document.documentElement.className = settings.theme
-	const dark = settings.theme === 'theme-dark'
-	setIcon(el.themeIcon, dark ? 'sun' : 'moon')
-	el.themeBtn.setAttribute('aria-label', dark ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro')
+	// Tema oscuro fijo: es el que mejor acompaña el modo enfoque
+	document.documentElement.className = 'theme-dark'
 }
 
 // ---------- Eventos ----------
@@ -1180,18 +1167,13 @@ document.querySelectorAll('.mode').forEach(b =>
 	})
 )
 
-el.themeBtn.addEventListener('click', () => {
-	settings.theme = settings.theme === 'theme-dark' ? 'theme-light' : 'theme-dark'
-	saveSettings()
-	applyTheme()
-})
-
 document.addEventListener('keydown', e => {
 	if (e.key === 'Escape' && isRunning()) {
 		peek = !peek
 		renderFocus()
 		return
 	}
+	if (document.body.classList.contains('locked')) return
 	const tag = document.activeElement?.tagName
 	if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
 	if (e.ctrlKey || e.metaKey || e.altKey) return
@@ -1235,3 +1217,204 @@ renderLog()
 renderHeader()
 renderGallery()
 loadBackground()
+
+// ---------- Cuenta obligatoria ----------
+const auth = {
+	box: $('#auth'),
+	loading: $('#authLoading'),
+	body: $('#authBody'),
+	offline: $('#authOffline'),
+	title: $('#authTitle'),
+	sub: $('#authSub'),
+	form: $('#authForm'),
+	nameField: $('#nameField'),
+	name: $('#authName'),
+	email: $('#authEmail'),
+	pass: $('#authPass'),
+	error: $('#authError'),
+	submit: $('#authSubmit'),
+	forgot: $('#forgotBtn'),
+	google: $('#googleBtn'),
+	tabs: document.querySelectorAll('[data-auth]')
+}
+let authMode = 'register'
+
+function showAuth(part) {
+	document.body.classList.add('locked')
+	auth.box.hidden = false
+	auth.loading.hidden = part !== 'loading'
+	auth.body.hidden = part !== 'form'
+	auth.offline.hidden = part !== 'offline'
+	if (part === 'form') setTimeout(() => (authMode === 'register' ? auth.name : auth.email).focus(), 50)
+}
+
+function unlock() {
+	document.body.classList.remove('locked')
+	auth.box.hidden = true
+}
+
+function setAuthMode(m) {
+	authMode = m
+	const reg = m === 'register'
+	auth.tabs.forEach(t => t.setAttribute('aria-selected', String(t.dataset.auth === m)))
+	auth.title.textContent = reg ? 'Crea tu cuenta' : 'Qué bueno verte de nuevo'
+	auth.sub.textContent = reg
+		? 'Tu progreso, tu racha y tus tareas quedan guardados y te siguen en cualquier dispositivo.'
+		: 'Inicia sesión para seguir con tu racha.'
+	auth.nameField.hidden = !reg
+	auth.forgot.hidden = reg
+	auth.pass.autocomplete = reg ? 'new-password' : 'current-password'
+	auth.submit.textContent = reg ? 'Crear cuenta' : 'Iniciar sesión'
+	auth.error.textContent = ''
+}
+auth.tabs.forEach(t => t.addEventListener('click', () => setAuthMode(t.dataset.auth)))
+
+function busy(on) {
+	auth.submit.disabled = on
+	auth.google.disabled = on
+	auth.box.classList.toggle('busy', on)
+}
+
+function authError(msg) {
+	auth.error.textContent = msg
+	auth.error.classList.remove('shake')
+	void auth.error.offsetWidth
+	auth.error.classList.add('shake')
+}
+
+auth.form.addEventListener('submit', async e => {
+	e.preventDefault()
+	const email = auth.email.value.trim()
+	const pass = auth.pass.value
+	const name = auth.name.value.trim()
+	if (authMode === 'register' && !name) return authError('Escribe tu nombre.')
+	if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return authError('Escribe un correo válido.')
+	if (pass.length < 6) return authError('La contraseña debe tener al menos 6 caracteres.')
+	busy(true)
+	auth.error.textContent = ''
+	try {
+		if (authMode === 'register') renderAccount(await cloud.register(name, email, pass))
+		else await cloud.login(email, pass)
+		// onUser se encarga del resto
+	} catch (err) {
+		authError(cloud.errorMessage(err))
+		busy(false)
+	}
+})
+
+auth.google.addEventListener('click', async () => {
+	busy(true)
+	auth.error.textContent = ''
+	try {
+		await cloud.loginWithGoogle()
+	} catch (err) {
+		authError(cloud.errorMessage(err))
+		busy(false)
+	}
+})
+
+auth.forgot.addEventListener('click', async () => {
+	const email = auth.email.value.trim()
+	if (!email) return authError('Escribe tu correo y vuelve a pulsar aquí.')
+	try {
+		await cloud.resetPassword(email)
+		auth.error.textContent = ''
+		toast('Te enviamos un correo para cambiar tu contraseña', 'check')
+	} catch (err) {
+		authError(cloud.errorMessage(err))
+	}
+})
+
+$('#retryBtn').addEventListener('click', () => location.reload())
+
+$('#logoutBtn').addEventListener('click', async () => {
+	if (isRunning()) pause()
+	await syncNow()
+	await cloud.logout()
+	// Borra los datos de esta cuenta del dispositivo, para que no se mezclen con otra
+	cloud.SYNC_KEYS.forEach(k => localStorage.removeItem('ft:' + k))
+	localStorage.removeItem('ft:log')
+	localStorage.removeItem('ft:uid')
+	location.reload()
+})
+
+function renderAccount(user) {
+	const name = user.displayName || user.email.split('@')[0]
+	$('#accountName').textContent = name
+	$('#accountAvatar').textContent = name.trim()[0]?.toUpperCase() || '?'
+	$('#account').title = user.email
+}
+
+// Une lo guardado en la nube con lo de este dispositivo
+function mergeRemote(remote) {
+	let changed = false
+	const localHist = store.get('history', {})
+	const remoteHist = remote?.history || {}
+	const merged = { ...remoteHist }
+	for (const [day, items] of Object.entries(localHist)) {
+		if (!merged[day] || items.length >= merged[day].length) merged[day] = items
+	}
+	if (JSON.stringify(merged) !== JSON.stringify(localHist)) changed = true
+	const writes = { history: merged }
+	for (const k of ['tasks', 'settings', 'volumes']) {
+		if (remote?.[k] == null) continue
+		let v = remote[k]
+		if (k === 'settings') v = { ...store.get('settings', {}), ...v, bgUpload: settings.bgUpload }
+		if (JSON.stringify(v) !== JSON.stringify(store.get(k, null))) {
+			writes[k] = v
+			changed = true
+		}
+	}
+	return { changed, writes }
+}
+
+async function startAuth() {
+	// Ya hubo sesión en este dispositivo y no hay internet: deja usar la app
+	const knownUid = localStorage.getItem('ft:uid')
+	showAuth('loading')
+	try {
+		await cloud.loadFirebase()
+	} catch {
+		if (knownUid) {
+			unlock()
+			setSync('offline')
+		} else showAuth('offline')
+		return
+	}
+
+	cloud.onUser(async user => {
+		if (!user) {
+			currentUser = null
+			setAuthMode(authMode)
+			showAuth('form')
+			busy(false)
+			return
+		}
+		showAuth('loading')
+		renderAccount(user)
+		const firstTime = localStorage.getItem('ft:uid') !== user.uid
+		try {
+			const remote = await cloud.pull(user.uid)
+			const { changed, writes } = mergeRemote(remote)
+			localStorage.setItem('ft:uid', user.uid)
+			currentUser = user
+			// Recarga una sola vez por sesión (evita bucles si la nube rechaza guardar)
+			if (changed && !sessionStorage.getItem('ft:merged')) {
+				sessionStorage.setItem('ft:merged', '1')
+				Object.entries(writes).forEach(([k, v]) => localStorage.setItem('ft:' + k, JSON.stringify(v)))
+				await syncNow()
+				location.reload() // carga los datos de tu cuenta
+				return
+			}
+			await syncNow()
+		} catch (e) {
+			currentUser = user
+			localStorage.setItem('ft:uid', user.uid)
+			setSync(navigator.onLine ? 'error' : 'offline', e)
+		}
+		unlock()
+		if (firstTime) toast(`Hola${user.displayName ? ', ' + user.displayName : ''}. Tu progreso se guarda en tu cuenta.`, 'check')
+	})
+}
+
+startAuth()

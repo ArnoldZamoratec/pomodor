@@ -14,9 +14,9 @@ Temporizador pomodoro con fondo según tu tema, sonidos ambientales y frases mot
 - **Tu progreso**: meta diaria, racha de días seguidos, gráfico de la semana y tiempo por tema (se guarda hasta un año).
 - **¿Cómo te fue?**: al terminar cada pomodoro marcas cómo te fue y si terminaste la tarea actual.
 - **Aviso suave** cuando falta 1 minuto y **sonidos más bajos** en los descansos (opcionales).
-- **Copia de seguridad**: guarda tu progreso en un archivo y restáuralo en otro navegador o dispositivo.
+- **Cuenta obligatoria** (Firebase): registro con correo o Google; el progreso, las tareas y los ajustes se sincronizan entre dispositivos.
 - **App instalable** (PWA): se puede añadir a la pantalla de inicio y funciona sin internet.
-- Tema claro/oscuro y pantalla completa opcional.
+- Pantalla completa opcional.
 
 ## Atajos de teclado
 
@@ -38,6 +38,14 @@ python -m http.server 8080
 ```
 
 Luego abre <http://localhost:8080>.
+
+## Configurar Firebase
+
+En la [consola de Firebase](https://console.firebase.google.com/) del proyecto `focus-pomodoro-a9f4b`:
+
+1. **Authentication → Método de acceso**: activa *Correo electrónico/contraseña* y *Google*.
+2. **Authentication → Configuración → Dominios autorizados**: agrega `arnoldzamoratec.github.io`.
+3. **Firestore Database → Crear base de datos**, y en **Reglas** pega el contenido de [`firestore.rules`](firestore.rules) y publica.
 
 ## Créditos
 
